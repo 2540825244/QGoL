@@ -1,7 +1,7 @@
 '''
 read and display any state file as images
-using system argument to select file
-also show as image sequence
+using system argument to select file and output folder
+shown after one another
 '''
 
 #import modules
@@ -20,7 +20,7 @@ if sys.argv[1] == "":
     sys.exit()
 else:
     try:
-        f_input = open(sys.argv[0], "r")
+        f_input = open(sys.argv[1], "r")
         dict_input = eval(f_input.read())
         f_input.close()
     except:
@@ -45,8 +45,22 @@ for t in range(time):
 #display the board
 fig = plt.figure()
 ims = []
+
+#read output folder
+try:
+    output_dir = sys.argv[2]
+except:
+    output_dir = f"working_folder/"
+
+
 for t in range(time):
-    im = plt.imshow(board[t], animated=True)
+    im = plt.imshow(board[t], animated=True, extent=[0, board_size_x, 0, board_size_y], label=f"t={t}", aspect="equal", vmin=0, vmax=2, cmap="Greys")
+    #add grid at the edge of each cell
+    for x in range(board_size_x + 1):
+        plt.plot([x, x], [0, board_size_y], color="black")
+    for y in range(board_size_y + 1):
+        plt.plot([0, board_size_x], [y, y], color="black")
     ims.append([im])
-ani = animation.ArtistAnimation(fig, ims, interval=50, blit=True, repeat_delay=1000)
-plt.show()
+    plt.title(f"t={t}")
+    plt.savefig(f"{output_dir}frame_{t}.png")
+    plt.show()

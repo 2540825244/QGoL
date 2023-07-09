@@ -71,6 +71,9 @@ def main():
                 print("Invalid command")
 
     #write the input to file
-    f_input = open(sys.argv[0], "w")
+    f_input = open(sys.argv[1], "w")
     f_input.write(str(dict_input))
     f_input.close()
+
+if __name__ == "__main__":
+    main()

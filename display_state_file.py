@@ -15,7 +15,7 @@ def label(x, y, t):
     return f"{x}_{y}_{t}"
 
 #read input
-if sys.argv[0] == "":
+if sys.argv[1] == "":
     print("No input file selected")
     sys.exit()
 else:

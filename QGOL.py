@@ -38,13 +38,13 @@ for var in var_list:
     bqm.add_variable(var, 0)
 
 #read input (if any)
-if sys.argv[0] == "#":
+if sys.argv[1] == "#":
     print("No input file selected")
     for var in var_list:
         bqm.set_linear(var, -10)
 else:
     try:
-        f_input = open(sys.argv[0], "r")
+        f_input = open(sys.argv[2], "r")
         dict_input = eval(f_input.read())
         for var in dict_input:
             if var == "x":

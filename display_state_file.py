@@ -1,7 +1,7 @@
 '''
 read and display any state file as images
 using system argument to select file
-also can save as image sequence
+also show as image sequence
 '''
 
 #import modules

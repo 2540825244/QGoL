@@ -105,13 +105,13 @@ print(f"Energy: {sampleset.first.energy}")
 
 #save output to file
 if sys.argv[1] == "#":
-    f_output = open("output.txt", "w")
+    f_output = open("working_folder/output.txt", "w")
 else:
     try:
         f_output = open(sys.argv[1], "w")
     except:
         print("Error writing output file")
-        f_output = open("output.txt", "w")
+        f_output = open("working_folder/output.txt", "w")
 
 dict_output = {}
 for var in sampleset.first.sample:

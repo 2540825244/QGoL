@@ -83,7 +83,11 @@ def main():
                 print()
 
     #write the input to file
-    f_input = open(sys.argv[1], "w")
+    try:
+        filename = sys.argv[1]
+    except:
+        filename = "input.txt"
+    f_input = open(filename, "w")
     f_input.write(str(dict_input))
     f_input.close()
 

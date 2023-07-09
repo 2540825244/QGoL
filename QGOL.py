@@ -22,14 +22,29 @@ from dwave.system import LeapHybridSampler
 import datetime
 import sys
 
-#customisable variables
-board_size_x = 10 #number of steps in x axis
-board_size_y = 10 #number of steps in x axis
-time = 10 #number of steps in time axis
-
 #label generator
 def label(x, y, t):
     return f'x{x}y{y}t{t}'
+
+#read special variables
+board_size_x = 10 #number of steps in x axis
+board_size_y = 10 #number of steps in x axis
+time = 10 #number of steps in time axis
+if sys.argv[1] == "#":
+    print("No input file selected")
+else:
+    try:
+        f_input = open(sys.argv[1], "r")
+        dict_input = eval(f_input.read())
+        board_size_x = dict_input["x"]
+        board_size_y = dict_input["y"]
+        time = dict_input["t"]
+        del dict_input["x"]
+        del dict_input["y"]
+        del dict_input["t"]
+        f_input.close()
+    except:
+        print("Error reading input file")
 
 #initialise model
 bqm = BinaryQuadraticModel.empty('BINARY')
@@ -44,17 +59,15 @@ if sys.argv[1] == "#":
         bqm.set_linear(var, -10)
 else:
     try:
-        f_input = open(sys.argv[2], "r")
+        f_input = open(sys.argv[1], "r")
         dict_input = eval(f_input.read())
         for var in dict_input:
-            if var == "x":
-                board_size_x = dict_input[var]
-            elif var == "y":
-                board_size_y = dict_input[var]
-            elif var == "t":
-                time = dict_input[var]
+            if dict_input[var] == 1:
+                bqm.set_linear(var, 10)
+            elif dict_input[var] == 0:
+                bqm.set_linear(var, -10)
             else:
-                bqm.set_linear(var, dict_input[var])
+                bqm.set_linear(var, 0)
         f_input.close()
     except:
         print("Error reading input file")
@@ -104,7 +117,7 @@ print(sampleset.first.sample)
 print(f"Energy: {sampleset.first.energy}")
 
 #save output to file
-if sys.argv[1] == "#":
+if sys.argv[2] == "#":
     f_output = open("working_folder/output.txt", "w")
 else:
     try:

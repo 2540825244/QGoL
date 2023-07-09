@@ -12,7 +12,7 @@ import numpy as np
 
 #label generator
 def label(x, y, t):
-    return f"{x}_{y}_{t}"
+    return f'x{x}y{y}t{t}'
 
 #read input
 if sys.argv[1] == "":

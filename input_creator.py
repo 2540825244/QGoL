@@ -14,7 +14,7 @@ commands:
 import sys
 
 def label(x, y, t):
-    return f"{x}_{y}_{t}"
+    return f'x{x}y{y}t{t}'
 
 def main():
     #create the input dictionary

@@ -194,13 +194,14 @@ for t in range(time - 1):
 
 
 #solve
+print("Solving...")
 time_start = datetime.datetime.now()
 sampler = LeapHybridSampler()
 sampleset = sampler.sample(bqm, time_limit=60)
-time_end = datetime.datetime.now()
-print(f"Time taken: {time_end - time_start}")
 print(sampleset.first.sample)
 print(f"Energy: {sampleset.first.energy}")
+time_end = datetime.datetime.now()
+print(f"Time taken: {time_end - time_start}")
 
 #save output to file
 try:
@@ -214,7 +215,7 @@ try:
             f_output = open("working_folder/output.txt", "w")
 except:
     f_output = open("working_folder/output.txt", "w")
-    
+
 dict_output = {}
 for var in sampleset.first.sample:
     dict_output[var] = sampleset.first.sample[var]

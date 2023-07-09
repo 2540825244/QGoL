@@ -58,8 +58,6 @@ for t in range(time):
             print(dict_input[label(x, y, t)], end=" ")
         print()
     print()
-print("dict_input:")
-print(dict_input)
 print("Continue? (y/n) [n]")
 if input() != "y":
     exit()

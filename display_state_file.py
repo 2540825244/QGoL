@@ -15,17 +15,21 @@ def label(x, y, t):
     return f'x{x}y{y}t{t}'
 
 #read input
-if sys.argv[1] == "":
+try:
+    if sys.argv[1] == "":
+        print("No input file selected")
+        sys.exit()
+    else:
+        try:
+            f_input = open(sys.argv[1], "r")
+            dict_input = eval(f_input.read())
+            f_input.close()
+        except:
+            print("Error reading input file")
+            sys.exit()
+except:
     print("No input file selected")
     sys.exit()
-else:
-    try:
-        f_input = open(sys.argv[1], "r")
-        dict_input = eval(f_input.read())
-        f_input.close()
-    except:
-        print("Error reading input file")
-        sys.exit()
 
 #set and remove special variables
 board_size_x = dict_input["x"]
@@ -41,6 +45,24 @@ for t in range(time):
     for y in range(board_size_y):
         for x in range(board_size_x):
             board[t][y][x] = dict_input[label(x, y, t)]
+
+#display as in OGOL.py
+#output the input and ask for confirmation
+print("Input:")
+print(f"Board size: {board_size_x}x{board_size_y}")
+print(f"Time: {time}")
+for t in range(time):
+    print(f"Time step {t}:")
+    for y in range(board_size_y):
+        for x in range(board_size_x):
+            print(dict_input[label(x, y, t)], end=" ")
+        print()
+    print()
+print("dict_input:")
+print(dict_input)
+print("Continue? (y/n) [n]")
+if input() != "y":
+    exit()
 
 #display the board
 fig = plt.figure()

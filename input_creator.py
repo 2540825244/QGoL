@@ -5,8 +5,9 @@ start with inputting the board size and time
 then all cells are initialised to 2
 then you can change the value of each cell using commands
 commands:
-    set x y t value
+    set t x y value
     fill t original_value new_value
+    show
     save
 '''
 
@@ -51,9 +52,9 @@ def main():
             break
         elif command.split(" ")[0] == "set":
             try:
-                x = int(command.split(" ")[1])
-                y = int(command.split(" ")[2])
-                t = int(command.split(" ")[3])
+                t = int(command.split(" ")[1])
+                x = int(command.split(" ")[2])
+                y = int(command.split(" ")[3])
                 value = int(command.split(" ")[4])
                 dict_input[label(x, y, t)] = value
             except:
@@ -69,6 +70,17 @@ def main():
                             dict_input[label(x, y, t)] = new_value
             except:
                 print("Invalid command")
+        elif command == "show":
+            print("Input:")
+            print(f"Board size: {board_size_x}x{board_size_y}")
+            print(f"Time: {time}")
+            for t in range(time):
+                print(f"Time step {t}:")
+                for y in range(board_size_y):
+                    for x in range(board_size_x):
+                        print(dict_input[label(x, y, t)], end=" ")
+                    print()
+                print()
 
     #write the input to file
     f_input = open(sys.argv[1], "w")

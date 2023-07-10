@@ -106,109 +106,109 @@ for t in range(time - 1):
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 4, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 3, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 4, strength=4))
-            bqm.update(combinations(neighbour_list, 3, strength=-6))
+            bqm.update(combinations(neighbour_list, 3, strength=-8))
 
             #for 2 neighbours alive and current cell alive, future cell must be alive
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 4, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 3, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 3, strength=4))
-            bqm.update(combinations(neighbour_list, 2, strength=-6))
+            bqm.update(combinations(neighbour_list, 2, strength=-8))
 
             #for 3 neighbours alive and current cell alive, future cell must be alive
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 5, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 4, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 4, strength=4))
-            bqm.update(combinations(neighbour_list, 3, strength=-6))
+            bqm.update(combinations(neighbour_list, 3, strength=-8))
 
             #for 0 neighbours alive and current cell alive, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 1, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 1, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 0, strength=4))
-            bqm.update(combinations(neighbour_list, 0, strength=-6))
+            bqm.update(combinations(neighbour_list, 0, strength=-8))
 
             #for 0 neighbours alive and current cell dead, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 0, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 0, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 0, strength=4))
-            bqm.update(combinations(neighbour_list, 0, strength=-6))
+            bqm.update(combinations(neighbour_list, 0, strength=-8))
 
             #for 1 neighbours alive and current cell alive, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 2, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 2, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 1, strength=4))
-            bqm.update(combinations(neighbour_list, 1, strength=-6))
+            bqm.update(combinations(neighbour_list, 1, strength=-8))
 
             #for 1 neighbours alive and current cell dead, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 1, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 1, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 1, strength=4))
-            bqm.update(combinations(neighbour_list, 1, strength=-6))
+            bqm.update(combinations(neighbour_list, 1, strength=-8))
 
             #for 2 neighbours alive and current cell dead, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 2, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 2, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 2, strength=4))
-            bqm.update(combinations(neighbour_list, 2, strength=-6))
+            bqm.update(combinations(neighbour_list, 2, strength=-8))
 
             #for 4 neighbours alive and current cell dead, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 4, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 4, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 4, strength=4))
-            bqm.update(combinations(neighbour_list, 4, strength=-6))
+            bqm.update(combinations(neighbour_list, 4, strength=-8))
 
             #for 4 neighbours alive and current cell alive, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 5, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 5, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 4, strength=4))
-            bqm.update(combinations(neighbour_list, 4, strength=-6))
+            bqm.update(combinations(neighbour_list, 4, strength=-8))
 
             #for 5 neighbours alive and current cell dead, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 5, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 5, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 5, strength=4))
-            bqm.update(combinations(neighbour_list, 5, strength=-6))
+            bqm.update(combinations(neighbour_list, 5, strength=-8))
 
             #for 5 neighbours alive and current cell alive, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 6, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 6, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 5, strength=4))
-            bqm.update(combinations(neighbour_list, 5, strength=-6))
+            bqm.update(combinations(neighbour_list, 5, strength=-8))
 
             #for 6 neighbours alive and current cell dead, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 6, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 6, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 6, strength=4))
-            bqm.update(combinations(neighbour_list, 6, strength=-6))
+            bqm.update(combinations(neighbour_list, 6, strength=-8))
 
             #for 6 neighbours alive and current cell alive, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 7, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 7, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 6, strength=4))
-            bqm.update(combinations(neighbour_list, 6, strength=-6))
+            bqm.update(combinations(neighbour_list, 6, strength=-8))
 
             #for 7 neighbours alive and current cell dead, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 7, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 7, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 7, strength=4))
-            bqm.update(combinations(neighbour_list, 7, strength=-6))
+            bqm.update(combinations(neighbour_list, 7, strength=-8))
 
             #for 7 neighbours alive and current cell alive, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 8, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 8, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 7, strength=4))
-            bqm.update(combinations(neighbour_list, 7, strength=-6))
+            bqm.update(combinations(neighbour_list, 7, strength=-8))
 
             #for 8 neighbours alive and current cell dead, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 8, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 8, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 8, strength=4))
-            bqm.update(combinations(neighbour_list, 8, strength=-6))
+            bqm.update(combinations(neighbour_list, 8, strength=-8))
 
             #for 8 neighbours alive and current cell alive, future cell must be dead
             bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 9, strength=2))
             bqm.update(combinations([label(x, y, t)] + neighbour_list, 9, strength=2))
             bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 8, strength=4))
-            bqm.update(combinations(neighbour_list, 8, strength=-6))
+            bqm.update(combinations(neighbour_list, 8, strength=-8))
 
 
 #solve

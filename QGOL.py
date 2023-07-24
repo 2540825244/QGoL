@@ -21,6 +21,7 @@ from dimod.generators.constraints import combinations
 from dwave.system import LeapHybridSampler, DWaveSampler, EmbeddingComposite
 import datetime
 import sys
+from display_state_file import display_state_file
 
 
 # label generator
@@ -87,54 +88,13 @@ var_list_death = [
     for t in range(time - 1)
 ]
 for var in var_list_cell:
-    bqm.add_variable(var, 20)
+    bqm.add_variable(var, 0)
 for var in var_list_reproduce:
     bqm.add_variable(var, 0)
 for var in var_list_survive:
     bqm.add_variable(var, 0)
 for var in var_list_death:
     bqm.add_variable(var, 0)
-
-    # read input (if any)
-    for var in dict_input:
-        if dict_input[var] == 1:
-            bqm.set_linear(var, -1000)
-        elif dict_input[var] == 0:
-            bqm.set_linear(var, 1000)
-
-# output the input and ask for confirmation
-print("Input:")
-print(f"Board size: {board_size_x}x{board_size_y}")
-print(f"Time: {time}")
-for t in range(time):
-    print(f"Time step {t}:")
-    print("Cell: ")
-    for y in range(board_size_y):
-        for x in range(board_size_x):
-            print(bqm.get_linear(label_cell(x, y, t)), end=" ")
-        print()
-    print()
-    if t != time - 1:
-        print("Reproduction: ")
-        for y in range(board_size_y):
-            for x in range(board_size_x):
-                print(bqm.get_linear(label_reproduce(x, y, t)), end=" ")
-            print()
-        print()
-        print("Survive: ")
-        for y in range(board_size_y):
-            for x in range(board_size_x):
-                print(bqm.get_linear(label_survive(x, y, t)), end=" ")
-            print()
-        print()
-        print("Death: ")
-        for y in range(board_size_y):
-            for x in range(board_size_x):
-                print(bqm.get_linear(label_death(x, y, t)), end=" ")
-            print()
-    print()
-if input("Confirm? (y/n) [n]: ") != "y":
-    exit()
 
 
 # add constraints
@@ -160,14 +120,16 @@ for t in range(time - 1):
             this_death = label_death(x, y, t)
 
             # reproduce and survive are mutually exclusive
-            bqm.update(combinations([this_reproduce, this_survive, this_death], 1, 100.0))
+            bqm.update(
+                combinations([this_reproduce, this_survive, this_death], 1, 100.0)
+            )
 
             # reproduction constraints
             # if a cell is dead and has 3 neighbours, it will reproduce
             # the constraint below is about: Penalty = PenaltyFactor * (sum(neighbour) + 3*reproduction)**2
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
-                + [(this_reproduce, 3)],
+                terms=[(neighbour, 1) for neighbour in neighbour_list]
+                + [(this_reproduce, -3)],
                 lagrange_multiplier=50.0,
                 constant=0,
             )
@@ -186,14 +148,14 @@ for t in range(time - 1):
             # if cell is alive and has 2 or 3 neighbours, it will survive
             # for 2 neighbours alive
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
-                + [(this_survive, 2)],
+                terms=[(neighbour, 1) for neighbour in neighbour_list]
+                + [(this_survive, -2)],
                 lagrange_multiplier=25.0,
                 constant=0,
             )
             # for 3 neighbours alive
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
+                terms=[(neighbour, 1) for neighbour in neighbour_list]
                 + [(this_survive, 3)],
                 lagrange_multiplier=25.0,
                 constant=0,
@@ -216,6 +178,14 @@ for t in range(time - 1):
                 lagrange_multiplier=20.0,
                 constant=0,
             )
+
+
+# read input (if any)
+for var in dict_input:
+    if dict_input[var] == 1:
+        bqm.fix_variable(var, 1)
+    elif dict_input[var] == 0:
+        bqm.fix_variable(var, 0)
 
 
 # solve
@@ -247,13 +217,47 @@ def quantum_solve(bqm):
     return sampleset
 
 
-solver_choice = str(input("Solver? (h for hybrid, q for quantum, quit to quit) [h]: "))
-if solver_choice == "q":
+# output the input and ask for confirmation as well as choice of solver
+print("Input:")
+print(f"Board size: {board_size_x}x{board_size_y}")
+print(f"Time: {time}")
+# for t in range(time):
+#     print(f"Time step {t}:")
+#     print("Cell: ")
+#     for y in range(board_size_y):
+#         for x in range(board_size_x):
+#             print(bqm.get_linear(label_cell(x, y, t)), end=" ")
+#         print()
+#     print()
+#     if t != time - 1:
+#         print("Reproduction: ")
+#         for y in range(board_size_y):
+#             for x in range(board_size_x):
+#                 print(bqm.get_linear(label_reproduce(x, y, t)), end=" ")
+#             print()
+#         print()
+#         print("Survive: ")
+#         for y in range(board_size_y):
+#             for x in range(board_size_x):
+#                 print(bqm.get_linear(label_survive(x, y, t)), end=" ")
+#             print()
+#         print()
+#         print("Death: ")
+#         for y in range(board_size_y):
+#             for x in range(board_size_x):
+#                 print(bqm.get_linear(label_death(x, y, t)), end=" ")
+#             print()
+#     print()
+choice = input(
+    "Select solver or quit (h for hybrid, q for quantum, quit to quit) [quit]: "
+)
+if choice == "q":
     sampleset = quantum_solve(bqm)
-elif solver_choice == "quit":
-    exit()
-else:
+elif choice == "h":
     sampleset = hybrid_solve(bqm)
+else:
+    exit()
+
 
 # save output to file
 try:
@@ -268,7 +272,7 @@ try:
 except:
     f_output = open("working_folder/output.txt", "w")
 
-dict_output = {}
+dict_output = dict_input
 for var in sampleset.first.sample:
     dict_output[var] = sampleset.first.sample[var]
 dict_output["x"] = board_size_x
@@ -277,3 +281,4 @@ dict_output["t"] = time
 # print(dict_output)
 f_output.write(str(dict_output))
 f_output.close()
+display_state_file(f_output.name)

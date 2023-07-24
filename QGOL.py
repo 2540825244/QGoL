@@ -84,26 +84,11 @@ for var in var_list_survive:
     bqm.add_variable(var, 0)
 
 # read input (if any)
-if sys.argv[1] == "#":
-    print("No input file selected")
-    for var in var_list_cell:
-        bqm.set_linear(var, -10)
-else:
-    try:
-        f_input = open(sys.argv[1], "r")
-        dict_input = eval(f_input.read())
-        for var in dict_input:
-            if dict_input[var] == 1:
-                bqm.set_linear(var, -1000)
-            elif dict_input[var] == 0:
-                bqm.set_linear(var, 2000)
-            else:
-                bqm.set_linear(var, 0)
-        f_input.close()
-    except:
-        print("Error reading input file")
-        for var in var_list_cell:
-            bqm.set_linear(var, -10)
+    for var in dict_input:
+        if dict_input[var] == 1:
+            bqm.set_linear(var, -1000)
+        elif dict_input[var] == 0:
+            bqm.set_linear(var, 1000)
 
 # output the input and ask for confirmation
 print("Input:")
@@ -116,8 +101,7 @@ for t in range(time):
             print(bqm.get_linear(label_cell(x, y, t)), end=" ")
         print()
     print()
-print("Confirm? (y/n) [n]")
-if input() != "y":
+if input("Confirm? (y/n) [n]: ") != "y":
     exit()
 
 
@@ -138,7 +122,7 @@ for t in range(time - 1):
                     )
             neighbour_list.remove(label_cell(x, y, t))
             this_cell = label_cell(x, y, t)
-            next_cell = label_cell(x, y, t + 1)
+            next_cell = label_cell(x,   y, t + 1)
             this_reproduce = label_reproduce(x, y, t)
             this_survive = label_survive(x, y, t)
 
@@ -149,49 +133,63 @@ for t in range(time - 1):
             # if a cell is dead and has 3 neighbours, it will reproduce
             # the constraint below is about: Penalty = PenaltyFactor * (sum(neighbour) + 3*reproduction)**2
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))]
+                terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
                 + [(this_reproduce, 3)],
-                lagrange_multiplier=5.0,
-                constant=0,
+                lagrange_multiplier=50.0,
+                constant=0
             )
             bqm.add_linear_equality_constraint(
                 terms=[(this_cell, 1), (this_reproduce, 1)],
-                lagrange_multiplier=2.0,
-                constant=0,
+                lagrange_multiplier=20.0,
+                constant=0
             )
             bqm.add_linear_equality_constraint(
-                terms=[(next_cell, 1), (this_reproduce, 1)],
-                lagrange_multiplier=4.0,
-                constant=0,
+                terms=[(next_cell, -1), (this_reproduce, 1)],
+                lagrange_multiplier=40.0,
+                constant=0
             )
+            # bqm.add_linear_equality_constraint(
+            #     terms=[(next_cell, 1), (this_reproduce, -1)],
+            #     lagrange_multiplier=40.0,
+            #     constant=0
+            # )
 
             # survive constraints
             # if cell is alive and has 2 or 3 neighbours, it will survive
             # for 2 neighbours alive
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))]
+                terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
                 + [(this_survive, 2)],
-                lagrange_multiplier=5.0,
-                constant=0,
+                lagrange_multiplier=50.0,
+                constant=0
             )
             # for 3 neighbours alive
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))]
+                terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
                 + [(this_survive, 3)],
-                lagrange_multiplier=5.0,
-                constant=0,
+                lagrange_multiplier=50.0,
+                constant=0
             )
             bqm.add_linear_equality_constraint(
-                terms=[(this_cell, 1), (this_survive, 1)],
-                lagrange_multiplier=2.0,
-                constant=0,
+                terms=[(this_cell, -1), (this_survive, 1)],
+                lagrange_multiplier=20.0,
+                constant=0
             )
+            # bqm.add_linear_equality_constraint(
+            #     terms=[(this_cell, 1), (this_survive, -1)],
+            #     lagrange_multiplier=20.0,
+            #     constant=0
+            # )
             bqm.add_linear_equality_constraint(
-                terms=[(next_cell, 1), (this_survive, 1)],
-                lagrange_multiplier=4.0,
-                constant=0,
+                terms=[(next_cell, -1), (this_survive, 1)],
+                lagrange_multiplier=40.0,
+                constant=0
             )
-
+            # bqm.add_linear_equality_constraint(
+            #     terms=[(next_cell, 1), (this_survive, -1)],
+            #     lagrange_multiplier=40.0,
+            #     constant=0
+            # )
 
 # solve
 def hybrid_solve(bqm):
@@ -222,9 +220,11 @@ def quantum_solve(bqm):
     return sampleset
 
 
-solver_choice = str(input("Solver? (h for hybrid, q for quantum) [h]"))
+solver_choice = str(input("Solver? (h for hybrid, q for quantum, quit to quit) [h]: "))
 if solver_choice == "q":
     sampleset = quantum_solve(bqm)
+elif solver_choice == "quit":
+    exit()
 else:
     sampleset = hybrid_solve(bqm)
 
@@ -247,6 +247,6 @@ for var in sampleset.first.sample:
 dict_output["x"] = board_size_x
 dict_output["y"] = board_size_y
 dict_output["t"] = time
-print(dict_output)
+#print(dict_output)
 f_output.write(str(dict_output))
 f_output.close()

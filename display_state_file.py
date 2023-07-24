@@ -1,24 +1,30 @@
-'''
+"""
 read and display any state file as images
 using system argument to select file and output folder
 shown after one another
-'''
+"""
 
-#import modules
+# import modules
 import sys
 import matplotlib.pyplot as plt
 import matplotlib.animation as animation
 import numpy as np
 
-#label generator
-def label_cell(x, y, t):
-    return f'x{x}y{y}t{t}'
-def label_reproduce(x, y, t):
-    return f'x{x}y{y}t{t}r'
-def label_survive(x, y, t):
-    return f'x{x}y{y}t{t}s'
 
-#read input
+# label generator
+def label_cell(x, y, t):
+    return f"x{x}y{y}t{t}"
+
+
+def label_reproduce(x, y, t):
+    return f"x{x}y{y}t{t}r"
+
+
+def label_survive(x, y, t):
+    return f"x{x}y{y}t{t}s"
+
+
+# read input
 try:
     if sys.argv[1] == "":
         print("No input file selected")
@@ -35,7 +41,7 @@ except:
     print("No input file selected")
     sys.exit()
 
-#set and remove special variables
+# set and remove special variables
 board_size_x = dict_input["x"]
 board_size_y = dict_input["y"]
 time = dict_input["t"]
@@ -43,15 +49,15 @@ del dict_input["x"]
 del dict_input["y"]
 del dict_input["t"]
 
-#initialise the board
+# initialise the board
 board = np.zeros((time, board_size_y, board_size_x), dtype=np.int8)
 for t in range(time):
     for y in range(board_size_y):
         for x in range(board_size_x):
             board[t][y][x] = dict_input[label_cell(x, y, t)]
 
-#display like in OGOL.py
-#output the input and ask for confirmation
+# display like in OGOL.py
+# output the input and ask for confirmation
 print("Input:")
 print(f"Board size: {board_size_x}x{board_size_y}")
 print(f"Time: {time}")
@@ -78,11 +84,11 @@ print("Continue? (y/n) [n]")
 if input() != "y":
     exit()
 
-#display the board
+# display the board
 fig = plt.figure()
 ims = []
 
-#read output folder
+# read output folder
 try:
     output_dir = sys.argv[2]
 except:
@@ -90,8 +96,17 @@ except:
 
 
 for t in range(time):
-    im = plt.imshow(board[t], animated=True, extent=[0, board_size_x, 0, board_size_y], label=f"t={t}", aspect="equal", vmin=0, vmax=2, cmap="Greys")
-    #add grid at the edge of each cell
+    im = plt.imshow(
+        board[t],
+        animated=True,
+        extent=[0, board_size_x, 0, board_size_y],
+        label=f"t={t}",
+        aspect="equal",
+        vmin=0,
+        vmax=2,
+        cmap="Greys",
+    )
+    # add grid at the edge of each cell
     for x in range(board_size_x + 1):
         plt.plot([x, x], [0, board_size_y], color="black")
     for y in range(board_size_y + 1):

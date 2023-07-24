@@ -1,4 +1,4 @@
-'''
+"""
 CLI to create input files for the simulation
 system argument for output file name
 start with inputting the board size and time
@@ -9,32 +9,34 @@ commands:
     fill t original_value new_value
     show
     save
-'''
+"""
 
 import sys
 
+
 def label(x, y, t):
-    return f'x{x}y{y}t{t}'
+    return f"x{x}y{y}t{t}"
+
 
 def main():
-    #create the input dictionary
+    # create the input dictionary
     dict_input = {}
-    #set the board size
+    # set the board size
     print("Input board size:")
     board_size_x = int(input("x: "))
     board_size_y = int(input("y: "))
     dict_input["x"] = board_size_x
     dict_input["y"] = board_size_y
-    #set the time
+    # set the time
     print("Input time:")
     time = int(input("t: "))
     dict_input["t"] = time
-    #set all cells to 2
+    # set all cells to 2
     for t in range(time):
         for x in range(board_size_x):
             for y in range(board_size_y):
                 dict_input[label(x, y, t)] = 2
-    #print the input
+    # print the input
     print("Input:")
     print(f"Board size: {board_size_x}x{board_size_y}")
     print(f"Time: {time}")
@@ -45,7 +47,7 @@ def main():
                 print(dict_input[label(x, y, t)], end=" ")
             print()
         print()
-    #command loop
+    # command loop
     while True:
         command = input(">")
         if command == "save":
@@ -82,7 +84,7 @@ def main():
                     print()
                 print()
 
-    #write the input to file
+    # write the input to file
     try:
         filename = sys.argv[1]
     except:
@@ -90,6 +92,7 @@ def main():
     f_input = open(filename, "w")
     f_input.write(str(dict_input))
     f_input.close()
+
 
 if __name__ == "__main__":
     main()

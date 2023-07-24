@@ -1,4 +1,4 @@
-'''
+"""
 Quantum annealing game of life
 using D-Wave's quantum annealer (BQM)
 many binary variables, named in format x{i}y{j}t{k}, for the 3 axis, x and y are the coordinates, t is the time
@@ -13,27 +13,33 @@ first argument is input file, second argument is output file
 use # to show no file selected for input or output
 if no input file is selected, the states are all biased to 0
 if no output file is selected, the states are saved to "output.txt"
-'''
+"""
 
-#import modules
+# import modules
 from dimod import BinaryQuadraticModel
 from dimod.generators.constraints import combinations
 from dwave.system import LeapHybridSampler, DWaveSampler, EmbeddingComposite
 import datetime
 import sys
 
-#label generator
-def label_cell(x, y, t):
-    return f'x{x}y{y}t{t}'
-def label_reproduce(x, y, t):
-    return f'x{x}y{y}t{t}r'
-def label_survive(x, y, t):
-    return f'x{x}y{y}t{t}s'
 
-#read special variables
-board_size_x = 10 #number of steps in x axis
-board_size_y = 10 #number of steps in x axis
-time = 10 #number of steps in time axis
+# label generator
+def label_cell(x, y, t):
+    return f"x{x}y{y}t{t}"
+
+
+def label_reproduce(x, y, t):
+    return f"x{x}y{y}t{t}r"
+
+
+def label_survive(x, y, t):
+    return f"x{x}y{y}t{t}s"
+
+
+# read special variables
+board_size_x = 10  # number of steps in x axis
+board_size_y = 10  # number of steps in x axis
+time = 10  # number of steps in time axis
 if sys.argv[1] == "#":
     print("No input file selected")
 else:
@@ -50,11 +56,26 @@ else:
     except:
         print("Error reading input file")
 
-#initialise model
-bqm = BinaryQuadraticModel.empty('BINARY')
-var_list_cell = [label_cell(x, y, t) for x in range(board_size_x) for y in range(board_size_y) for t in range(time)]
-var_list_reproduce = [label_reproduce(x, y, t) for x in range(board_size_x) for y in range(board_size_y) for t in range(time-1)]
-var_list_survive = [label_survive(x, y, t) for x in range(board_size_x) for y in range(board_size_y) for t in range(time-1)]
+# initialise model
+bqm = BinaryQuadraticModel.empty("BINARY")
+var_list_cell = [
+    label_cell(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time)
+]
+var_list_reproduce = [
+    label_reproduce(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
+var_list_survive = [
+    label_survive(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
 for var in var_list_cell:
     bqm.add_variable(var, 0)
 for var in var_list_reproduce:
@@ -62,7 +83,7 @@ for var in var_list_reproduce:
 for var in var_list_survive:
     bqm.add_variable(var, 0)
 
-#read input (if any)
+# read input (if any)
 if sys.argv[1] == "#":
     print("No input file selected")
     for var in var_list_cell:
@@ -84,7 +105,7 @@ else:
         for var in var_list_cell:
             bqm.set_linear(var, -10)
 
-#output the input and ask for confirmation
+# output the input and ask for confirmation
 print("Input:")
 print(f"Board size: {board_size_x}x{board_size_y}")
 print(f"Time: {time}")
@@ -100,70 +121,79 @@ if input() != "y":
     exit()
 
 
-#add constraints
+# add constraints
 for t in range(time - 1):
     for x in range(board_size_x):
         for y in range(board_size_y):
-            #get list of neighbours' label
+            # get list of neighbours' label
             neighbour_list = []
             for x_offset in [-1, 0, 1]:
                 for y_offset in [-1, 0, 1]:
-                    neighbour_list.append(label_cell((x + x_offset) % board_size_x, (y + y_offset) % board_size_y, t))
+                    neighbour_list.append(
+                        label_cell(
+                            (x + x_offset) % board_size_x,
+                            (y + y_offset) % board_size_y,
+                            t,
+                        )
+                    )
             neighbour_list.remove(label_cell(x, y, t))
             this_cell = label_cell(x, y, t)
             next_cell = label_cell(x, y, t + 1)
             this_reproduce = label_reproduce(x, y, t)
             this_survive = label_survive(x, y, t)
 
-            #reproduce and survive are mutually exclusive
+            # reproduce and survive are mutually exclusive
             bqm.update(combinations([this_reproduce, this_survive], 1, 1.0))
 
-            #reproduction constraints
-            #if a cell is dead and has 3 neighbours, it will reproduce
-            #the constraint below is about: Penalty = PenaltyFactor * (sum(neighbour) + 3*reproduction)**2
+            # reproduction constraints
+            # if a cell is dead and has 3 neighbours, it will reproduce
+            # the constraint below is about: Penalty = PenaltyFactor * (sum(neighbour) + 3*reproduction)**2
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))] + [(this_reproduce, 3)],
+                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))]
+                + [(this_reproduce, 3)],
                 lagrange_multiplier=5.0,
-                constant=0
+                constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(this_cell, 1), (this_reproduce, 1)],
                 lagrange_multiplier=2.0,
-                constant=0
+                constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(next_cell, 1), (this_reproduce, 1)],
                 lagrange_multiplier=4.0,
-                constant=0
+                constant=0,
             )
 
             # survive constraints
             # if cell is alive and has 2 or 3 neighbours, it will survive
             # for 2 neighbours alive
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))] + [(this_survive, 2)],
+                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))]
+                + [(this_survive, 2)],
                 lagrange_multiplier=5.0,
-                constant=0
+                constant=0,
             )
             # for 3 neighbours alive
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))] + [(this_survive, 3)],
+                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))]
+                + [(this_survive, 3)],
                 lagrange_multiplier=5.0,
-                constant=0
+                constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(this_cell, 1), (this_survive, 1)],
                 lagrange_multiplier=2.0,
-                constant=0
+                constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(next_cell, 1), (this_survive, 1)],
                 lagrange_multiplier=4.0,
-                constant=0
+                constant=0,
             )
 
 
-#solve
+# solve
 def hybrid_solve(bqm):
     print("Solving...")
     time_start = datetime.datetime.now()
@@ -176,6 +206,7 @@ def hybrid_solve(bqm):
     time_end = datetime.datetime.now()
     print(f"Time taken: {time_end - time_start}")
     return sampleset
+
 
 def quantum_solve(bqm):
     print("Solving...")
@@ -190,13 +221,14 @@ def quantum_solve(bqm):
     print(f"Time taken: {time_end - time_start}")
     return sampleset
 
+
 solver_choice = str(input("Solver? (h for hybrid, q for quantum) [h]"))
 if solver_choice == "q":
     sampleset = quantum_solve(bqm)
 else:
     sampleset = hybrid_solve(bqm)
 
-#save output to file
+# save output to file
 try:
     if sys.argv[2] == "#":
         f_output = open("working_folder/output.txt", "w")
@@ -218,4 +250,3 @@ dict_output["t"] = time
 print(dict_output)
 f_output.write(str(dict_output))
 f_output.close()
-

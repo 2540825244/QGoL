@@ -11,8 +11,12 @@ import matplotlib.animation as animation
 import numpy as np
 
 #label generator
-def label(x, y, t):
+def label_cell(x, y, t):
     return f'x{x}y{y}t{t}'
+def label_reproduce(x, y, t):
+    return f'x{x}y{y}t{t}r'
+def label_survive(x, y, t):
+    return f'x{x}y{y}t{t}s'
 
 #read input
 try:
@@ -44,9 +48,9 @@ board = np.zeros((time, board_size_y, board_size_x), dtype=np.int8)
 for t in range(time):
     for y in range(board_size_y):
         for x in range(board_size_x):
-            board[t][y][x] = dict_input[label(x, y, t)]
+            board[t][y][x] = dict_input[label_cell(x, y, t)]
 
-#display as in OGOL.py
+#display like in OGOL.py
 #output the input and ask for confirmation
 print("Input:")
 print(f"Board size: {board_size_x}x{board_size_y}")
@@ -55,7 +59,19 @@ for t in range(time):
     print(f"Time step {t}:")
     for y in range(board_size_y):
         for x in range(board_size_x):
-            print(dict_input[label(x, y, t)], end=" ")
+            print(dict_input[label_cell(x, y, t)], end=" ")
+        print("  ", end="")
+        for x in range(board_size_x):
+            try:
+                print(dict_input[label_reproduce(x, y, t)], end=" ")
+            except:
+                print("0", end=" ")
+        print("  ", end="")
+        for x in range(board_size_x):
+            try:
+                print(dict_input[label_survive(x, y, t)], end=" ")
+            except:
+                print("0", end=" ")
         print()
     print()
 print("Continue? (y/n) [n]")

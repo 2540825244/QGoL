@@ -18,13 +18,17 @@ if no output file is selected, the states are saved to "output.txt"
 #import modules
 from dimod import BinaryQuadraticModel
 from dimod.generators.constraints import combinations
-from dwave.system import LeapHybridSampler
+from dwave.system import LeapHybridSampler, DWaveSampler, EmbeddingComposite
 import datetime
 import sys
 
 #label generator
-def label(x, y, t):
+def label_cell(x, y, t):
     return f'x{x}y{y}t{t}'
+def label_reproduce(x, y, t):
+    return f'x{x}y{y}t{t}r'
+def label_survive(x, y, t):
+    return f'x{x}y{y}t{t}s'
 
 #read special variables
 board_size_x = 10 #number of steps in x axis
@@ -48,14 +52,20 @@ else:
 
 #initialise model
 bqm = BinaryQuadraticModel.empty('BINARY')
-var_list = [label(x, y, t) for x in range(board_size_x) for y in range(board_size_y) for t in range(time)]
-for var in var_list:
+var_list_cell = [label_cell(x, y, t) for x in range(board_size_x) for y in range(board_size_y) for t in range(time)]
+var_list_reproduce = [label_reproduce(x, y, t) for x in range(board_size_x) for y in range(board_size_y) for t in range(time-1)]
+var_list_survive = [label_survive(x, y, t) for x in range(board_size_x) for y in range(board_size_y) for t in range(time-1)]
+for var in var_list_cell:
+    bqm.add_variable(var, 0)
+for var in var_list_reproduce:
+    bqm.add_variable(var, 0)
+for var in var_list_survive:
     bqm.add_variable(var, 0)
 
 #read input (if any)
 if sys.argv[1] == "#":
     print("No input file selected")
-    for var in var_list:
+    for var in var_list_cell:
         bqm.set_linear(var, -10)
 else:
     try:
@@ -71,7 +81,7 @@ else:
         f_input.close()
     except:
         print("Error reading input file")
-        for var in var_list:
+        for var in var_list_cell:
             bqm.set_linear(var, -10)
 
 #output the input and ask for confirmation
@@ -82,7 +92,7 @@ for t in range(time):
     print(f"Time step {t}:")
     for y in range(board_size_y):
         for x in range(board_size_x):
-            print(bqm.get_linear(label(x, y, t)), end=" ")
+            print(bqm.get_linear(label_cell(x, y, t)), end=" ")
         print()
     print()
 print("Confirm? (y/n) [n]")
@@ -98,130 +108,93 @@ for t in range(time - 1):
             neighbour_list = []
             for x_offset in [-1, 0, 1]:
                 for y_offset in [-1, 0, 1]:
-                    neighbour_list.append(label((x + x_offset) % board_size_x, (y + y_offset) % board_size_y, t))
-            neighbour_list.remove(label(x, y, t))
-            
-            #ideology, so for each scenario, have 3 constraints, take into account now, future and both
-            #for 3 neighbours alive and current cell dead, future cell must be alive
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 4, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 3, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 4, strength=4))
-            bqm.update(combinations(neighbour_list, 3, strength=-8))
+                    neighbour_list.append(label_cell((x + x_offset) % board_size_x, (y + y_offset) % board_size_y, t))
+            neighbour_list.remove(label_cell(x, y, t))
+            this_cell = label_cell(x, y, t)
+            next_cell = label_cell(x, y, t + 1)
+            this_reproduce = label_reproduce(x, y, t)
+            this_survive = label_survive(x, y, t)
 
-            #for 2 neighbours alive and current cell alive, future cell must be alive
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 4, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 3, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 3, strength=4))
-            bqm.update(combinations(neighbour_list, 2, strength=-8))
+            #reproduce and survive are mutually exclusive
+            bqm.update(combinations([this_reproduce, this_survive], 1, 1.0))
 
-            #for 3 neighbours alive and current cell alive, future cell must be alive
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 5, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 4, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 4, strength=4))
-            bqm.update(combinations(neighbour_list, 3, strength=-8))
+            #reproduction constraints
+            #if a cell is dead and has 3 neighbours, it will reproduce
+            #the constraint below is about: Penalty = PenaltyFactor * (sum(neighbour) + 3*reproduction)**2
+            bqm.add_linear_equality_constraint(
+                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))] + [(this_reproduce, 3)],
+                lagrange_multiplier=5.0,
+                constant=0
+            )
+            bqm.add_linear_equality_constraint(
+                terms=[(this_cell, 1), (this_reproduce, 1)],
+                lagrange_multiplier=2.0,
+                constant=0
+            )
+            bqm.add_linear_equality_constraint(
+                terms=[(next_cell, 1), (this_reproduce, 1)],
+                lagrange_multiplier=4.0,
+                constant=0
+            )
 
-            #for 0 neighbours alive and current cell alive, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 1, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 1, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 0, strength=4))
-            bqm.update(combinations(neighbour_list, 0, strength=-8))
-
-            #for 0 neighbours alive and current cell dead, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 0, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 0, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 0, strength=4))
-            bqm.update(combinations(neighbour_list, 0, strength=-8))
-
-            #for 1 neighbours alive and current cell alive, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 2, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 2, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 1, strength=4))
-            bqm.update(combinations(neighbour_list, 1, strength=-8))
-
-            #for 1 neighbours alive and current cell dead, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 1, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 1, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 1, strength=4))
-            bqm.update(combinations(neighbour_list, 1, strength=-8))
-
-            #for 2 neighbours alive and current cell dead, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 2, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 2, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 2, strength=4))
-            bqm.update(combinations(neighbour_list, 2, strength=-8))
-
-            #for 4 neighbours alive and current cell dead, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 4, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 4, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 4, strength=4))
-            bqm.update(combinations(neighbour_list, 4, strength=-8))
-
-            #for 4 neighbours alive and current cell alive, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 5, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 5, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 4, strength=4))
-            bqm.update(combinations(neighbour_list, 4, strength=-8))
-
-            #for 5 neighbours alive and current cell dead, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 5, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 5, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 5, strength=4))
-            bqm.update(combinations(neighbour_list, 5, strength=-8))
-
-            #for 5 neighbours alive and current cell alive, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 6, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 6, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 5, strength=4))
-            bqm.update(combinations(neighbour_list, 5, strength=-8))
-
-            #for 6 neighbours alive and current cell dead, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 6, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 6, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 6, strength=4))
-            bqm.update(combinations(neighbour_list, 6, strength=-8))
-
-            #for 6 neighbours alive and current cell alive, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 7, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 7, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 6, strength=4))
-            bqm.update(combinations(neighbour_list, 6, strength=-8))
-
-            #for 7 neighbours alive and current cell dead, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 7, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 7, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 7, strength=4))
-            bqm.update(combinations(neighbour_list, 7, strength=-8))
-
-            #for 7 neighbours alive and current cell alive, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 8, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 8, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 7, strength=4))
-            bqm.update(combinations(neighbour_list, 7, strength=-8))
-
-            #for 8 neighbours alive and current cell dead, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 8, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 8, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 8, strength=4))
-            bqm.update(combinations(neighbour_list, 8, strength=-8))
-
-            #for 8 neighbours alive and current cell alive, future cell must be dead
-            bqm.update(combinations([label(x, y, t), label(x, y, t+1)] + neighbour_list, 9, strength=2))
-            bqm.update(combinations([label(x, y, t)] + neighbour_list, 9, strength=2))
-            bqm.update(combinations([label(x, y, t+1)] + neighbour_list, 8, strength=4))
-            bqm.update(combinations(neighbour_list, 8, strength=-8))
+            # survive constraints
+            # if cell is alive and has 2 or 3 neighbours, it will survive
+            # for 2 neighbours alive
+            bqm.add_linear_equality_constraint(
+                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))] + [(this_survive, 2)],
+                lagrange_multiplier=5.0,
+                constant=0
+            )
+            # for 3 neighbours alive
+            bqm.add_linear_equality_constraint(
+                terms=[(neighbour_list[i], 1) for i in range(len(neighbour_list))] + [(this_survive, 3)],
+                lagrange_multiplier=5.0,
+                constant=0
+            )
+            bqm.add_linear_equality_constraint(
+                terms=[(this_cell, 1), (this_survive, 1)],
+                lagrange_multiplier=2.0,
+                constant=0
+            )
+            bqm.add_linear_equality_constraint(
+                terms=[(next_cell, 1), (this_survive, 1)],
+                lagrange_multiplier=4.0,
+                constant=0
+            )
 
 
 #solve
-print("Solving...")
-time_start = datetime.datetime.now()
-sampler = LeapHybridSampler()
-sampleset = sampler.sample(bqm, label="QGOL")
-solution = sampleset.first.sample
-print("Solved")
-print(f"Solution: {solution}")
-print(f"Energy: {sampleset.first.energy}")
-time_end = datetime.datetime.now()
-print(f"Time taken: {time_end - time_start}")
+def hybrid_solve(bqm):
+    print("Solving...")
+    time_start = datetime.datetime.now()
+    sampler = LeapHybridSampler()
+    sampleset = sampler.sample(bqm, label="QGOL - H")
+    solution = sampleset.first.sample
+    print("Solved")
+    print(f"Solution: {solution}")
+    print(f"Energy: {sampleset.first.energy}")
+    time_end = datetime.datetime.now()
+    print(f"Time taken: {time_end - time_start}")
+    return sampleset
+
+def quantum_solve(bqm):
+    print("Solving...")
+    time_start = datetime.datetime.now()
+    sampler = EmbeddingComposite(DWaveSampler())
+    sampleset = sampler.sample(bqm, label="QGOL - Q", num_reads=1000)
+    solution = sampleset.first.sample
+    print("Solved")
+    print(f"Solution: {solution}")
+    print(f"Energy: {sampleset.first.energy}")
+    time_end = datetime.datetime.now()
+    print(f"Time taken: {time_end - time_start}")
+    return sampleset
+
+solver_choice = str(input("Solver? (h for hybrid, q for quantum) [h]"))
+if solver_choice == "q":
+    sampleset = quantum_solve(bqm)
+else:
+    sampleset = hybrid_solve(bqm)
 
 #save output to file
 try:
@@ -237,7 +210,7 @@ except:
     f_output = open("working_folder/output.txt", "w")
 
 dict_output = {}
-for var in solution:
+for var in sampleset.first.sample:
     dict_output[var] = sampleset.first.sample[var]
 dict_output["x"] = board_size_x
 dict_output["y"] = board_size_y

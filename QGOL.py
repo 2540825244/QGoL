@@ -77,13 +77,13 @@ var_list_survive = [
     for t in range(time - 1)
 ]
 for var in var_list_cell:
-    bqm.add_variable(var, 0)
+    bqm.add_variable(var, 20)
 for var in var_list_reproduce:
     bqm.add_variable(var, 0)
 for var in var_list_survive:
     bqm.add_variable(var, 0)
 
-# read input (if any)
+    # read input (if any)
     for var in dict_input:
         if dict_input[var] == 1:
             bqm.set_linear(var, -1000)
@@ -133,7 +133,7 @@ for t in range(time - 1):
                     )
             neighbour_list.remove(label_cell(x, y, t))
             this_cell = label_cell(x, y, t)
-            next_cell = label_cell(x,   y, t + 1)
+            next_cell = label_cell(x, y, t + 1)
             this_reproduce = label_reproduce(x, y, t)
             this_survive = label_survive(x, y, t)
 
@@ -147,23 +147,23 @@ for t in range(time - 1):
                 terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
                 + [(this_reproduce, 3)],
                 lagrange_multiplier=50.0,
-                constant=0
+                constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(this_cell, 1), (this_reproduce, 1)],
                 lagrange_multiplier=20.0,
-                constant=0
+                constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(next_cell, -1), (this_reproduce, 1)],
                 lagrange_multiplier=40.0,
-                constant=0
+                constant=0,
             )
-            # bqm.add_linear_equality_constraint(
-            #     terms=[(next_cell, 1), (this_reproduce, -1)],
-            #     lagrange_multiplier=40.0,
-            #     constant=0
-            # )
+            bqm.add_linear_equality_constraint(
+                terms=[(next_cell, 1), (this_reproduce, -1)],
+                lagrange_multiplier=40.0,
+                constant=0,
+            )
 
             # survive constraints
             # if cell is alive and has 2 or 3 neighbours, it will survive
@@ -172,35 +172,36 @@ for t in range(time - 1):
                 terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
                 + [(this_survive, 2)],
                 lagrange_multiplier=50.0,
-                constant=0
+                constant=0,
             )
             # for 3 neighbours alive
             bqm.add_linear_equality_constraint(
                 terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
                 + [(this_survive, 3)],
                 lagrange_multiplier=50.0,
-                constant=0
+                constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(this_cell, -1), (this_survive, 1)],
                 lagrange_multiplier=20.0,
-                constant=0
+                constant=0,
             )
-            # bqm.add_linear_equality_constraint(
-            #     terms=[(this_cell, 1), (this_survive, -1)],
-            #     lagrange_multiplier=20.0,
-            #     constant=0
-            # )
+            bqm.add_linear_equality_constraint(
+                terms=[(this_cell, 1), (this_survive, -1)],
+                lagrange_multiplier=20.0,
+                constant=0,
+            )
             bqm.add_linear_equality_constraint(
                 terms=[(next_cell, -1), (this_survive, 1)],
                 lagrange_multiplier=40.0,
-                constant=0
+                constant=0,
             )
-            # bqm.add_linear_equality_constraint(
-            #     terms=[(next_cell, 1), (this_survive, -1)],
-            #     lagrange_multiplier=40.0,
-            #     constant=0
-            # )
+            bqm.add_linear_equality_constraint(
+                terms=[(next_cell, 1), (this_survive, -1)],
+                lagrange_multiplier=40.0,
+                constant=0,
+            )
+
 
 # solve
 def hybrid_solve(bqm):
@@ -258,6 +259,6 @@ for var in sampleset.first.sample:
 dict_output["x"] = board_size_x
 dict_output["y"] = board_size_y
 dict_output["t"] = time
-#print(dict_output)
+# print(dict_output)
 f_output.write(str(dict_output))
 f_output.close()

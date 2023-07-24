@@ -36,6 +36,10 @@ def label_survive(x, y, t):
     return f"x{x}y{y}t{t}s"
 
 
+def label_death(x, y, t):
+    return f"x{x}y{y}t{t}d"
+
+
 # read special variables
 board_size_x = 10  # number of steps in x axis
 board_size_y = 10  # number of steps in x axis
@@ -76,11 +80,19 @@ var_list_survive = [
     for y in range(board_size_y)
     for t in range(time - 1)
 ]
+var_list_death = [
+    label_death(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
 for var in var_list_cell:
     bqm.add_variable(var, 20)
 for var in var_list_reproduce:
     bqm.add_variable(var, 0)
 for var in var_list_survive:
+    bqm.add_variable(var, 0)
+for var in var_list_death:
     bqm.add_variable(var, 0)
 
     # read input (if any)
@@ -96,20 +108,29 @@ print(f"Board size: {board_size_x}x{board_size_y}")
 print(f"Time: {time}")
 for t in range(time):
     print(f"Time step {t}:")
+    print("Cell: ")
     for y in range(board_size_y):
         for x in range(board_size_x):
             print(bqm.get_linear(label_cell(x, y, t)), end=" ")
         print()
     print()
     if t != time - 1:
+        print("Reproduction: ")
         for y in range(board_size_y):
             for x in range(board_size_x):
                 print(bqm.get_linear(label_reproduce(x, y, t)), end=" ")
             print()
         print()
+        print("Survive: ")
         for y in range(board_size_y):
             for x in range(board_size_x):
                 print(bqm.get_linear(label_survive(x, y, t)), end=" ")
+            print()
+        print()
+        print("Death: ")
+        for y in range(board_size_y):
+            for x in range(board_size_x):
+                print(bqm.get_linear(label_death(x, y, t)), end=" ")
             print()
     print()
 if input("Confirm? (y/n) [n]: ") != "y":
@@ -136,9 +157,10 @@ for t in range(time - 1):
             next_cell = label_cell(x, y, t + 1)
             this_reproduce = label_reproduce(x, y, t)
             this_survive = label_survive(x, y, t)
+            this_death = label_death(x, y, t)
 
             # reproduce and survive are mutually exclusive
-            bqm.update(combinations([this_reproduce, this_survive], 1, 1.0))
+            bqm.update(combinations([this_reproduce, this_survive, this_death], 1, 100.0))
 
             # reproduction constraints
             # if a cell is dead and has 3 neighbours, it will reproduce
@@ -155,11 +177,6 @@ for t in range(time - 1):
                 constant=0,
             )
             bqm.add_linear_equality_constraint(
-                terms=[(next_cell, -1), (this_reproduce, 1)],
-                lagrange_multiplier=40.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
                 terms=[(next_cell, 1), (this_reproduce, -1)],
                 lagrange_multiplier=40.0,
                 constant=0,
@@ -171,19 +188,14 @@ for t in range(time - 1):
             bqm.add_linear_equality_constraint(
                 terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
                 + [(this_survive, 2)],
-                lagrange_multiplier=50.0,
+                lagrange_multiplier=25.0,
                 constant=0,
             )
             # for 3 neighbours alive
             bqm.add_linear_equality_constraint(
                 terms=[(neighbour, 1) for neighbour in range(len(neighbour_list))]
                 + [(this_survive, 3)],
-                lagrange_multiplier=50.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
-                terms=[(this_cell, -1), (this_survive, 1)],
-                lagrange_multiplier=20.0,
+                lagrange_multiplier=25.0,
                 constant=0,
             )
             bqm.add_linear_equality_constraint(
@@ -192,13 +204,16 @@ for t in range(time - 1):
                 constant=0,
             )
             bqm.add_linear_equality_constraint(
-                terms=[(next_cell, -1), (this_survive, 1)],
+                terms=[(next_cell, 1), (this_survive, -1)],
                 lagrange_multiplier=40.0,
                 constant=0,
             )
+
+            # death constraints
+            # otherwise, the cell will die/remain dead
             bqm.add_linear_equality_constraint(
-                terms=[(next_cell, 1), (this_survive, -1)],
-                lagrange_multiplier=40.0,
+                terms=[(next_cell, 1), (this_death, 1)],
+                lagrange_multiplier=20.0,
                 constant=0,
             )
 

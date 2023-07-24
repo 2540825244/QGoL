@@ -19,6 +19,10 @@ def label_survive(x, y, t):
     return f"x{x}y{y}t{t}s"
 
 
+def label_death(x, y, t):
+    return f"x{x}y{y}t{t}d"
+
+
 # read special variables
 board_size_x = 10  # number of steps in x axis
 board_size_y = 10  # number of steps in x axis
@@ -46,6 +50,7 @@ for x in range(board_size_x):
         for t in range(time):
             question_space[label_reproduce(x, y, t)] = 0
             question_space[label_survive(x, y, t)] = 0
+            question_space[label_death(x, y, t)] = 0
 
 # iterate through time
 for t in range(time - 1):
@@ -66,6 +71,7 @@ for t in range(time - 1):
             next_cell = label_cell(x, y, t + 1)
             this_reproduce = label_reproduce(x, y, t)
             this_survive = label_survive(x, y, t)
+            this_death = label_death(x, y, t)
 
             neighbour_alive_sum = 0
             for neighbour in neighbour_list:
@@ -78,6 +84,7 @@ for t in range(time - 1):
                 question_space[this_survive] = 1
                 question_space[next_cell] = 1
             else:
+                question_space[this_death] = 1
                 question_space[next_cell] = 0
 
 # output the result

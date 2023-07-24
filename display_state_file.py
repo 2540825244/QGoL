@@ -24,6 +24,10 @@ def label_survive(x, y, t):
     return f"x{x}y{y}t{t}s"
 
 
+def label_death(x, y, t):
+    return f"x{x}y{y}t{t}d"
+
+
 # read input
 try:
     if sys.argv[1] == "":
@@ -76,6 +80,12 @@ for t in range(time):
         for x in range(board_size_x):
             try:
                 print(dict_input[label_survive(x, y, t)], end=" ")
+            except:
+                print("0", end=" ")
+        print("  ", end="")
+        for x in range(board_size_x):
+            try:
+                print(dict_input[label_death(x, y, t)], end=" ")
             except:
                 print("0", end=" ")
         print()

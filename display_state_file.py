@@ -64,6 +64,7 @@ def display_state_file(file_dir):
     print(f"Time: {time}")
     for t in range(time):
         print(f"Time step {t}:")
+        print("Cell        Reproduce   Survive     Death")
         for y in range(board_size_y):
             for x in range(board_size_x):
                 print(dict_input[label_cell(x, y, t)], end=" ")

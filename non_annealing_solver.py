@@ -47,7 +47,7 @@ else:
 question_space = dict_input
 for x in range(board_size_x):
     for y in range(board_size_y):
-        for t in range(time):
+        for t in range(time - 1):
             question_space[label_reproduce(x, y, t)] = 0
             question_space[label_survive(x, y, t)] = 0
             question_space[label_death(x, y, t)] = 0

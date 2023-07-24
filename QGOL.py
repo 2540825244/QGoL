@@ -22,6 +22,7 @@ from dwave.system import LeapHybridSampler, DWaveSampler, EmbeddingComposite
 import datetime
 import sys
 from display_state_file import display_state_file
+from neal import SimulatedAnnealingSampler
 
 
 # label generator
@@ -121,7 +122,7 @@ for t in range(time - 1):
 
             # reproduce and survive are mutually exclusive
             bqm.update(
-                combinations([this_reproduce, this_survive, this_death], 1, 100.0)
+                combinations([this_reproduce, this_survive, this_death], 1, 500.0)
             )
 
             # reproduction constraints
@@ -130,17 +131,17 @@ for t in range(time - 1):
             bqm.add_linear_equality_constraint(
                 terms=[(neighbour, 1) for neighbour in neighbour_list]
                 + [(this_reproduce, -3)],
-                lagrange_multiplier=50.0,
+                lagrange_multiplier=120.0,
                 constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(this_cell, 1), (this_reproduce, 1)],
-                lagrange_multiplier=20.0,
+                lagrange_multiplier=240.0,
                 constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(next_cell, 1), (this_reproduce, -1)],
-                lagrange_multiplier=40.0,
+                lagrange_multiplier=400.0,
                 constant=0,
             )
 
@@ -150,24 +151,24 @@ for t in range(time - 1):
             bqm.add_linear_equality_constraint(
                 terms=[(neighbour, 1) for neighbour in neighbour_list]
                 + [(this_survive, -2)],
-                lagrange_multiplier=25.0,
+                lagrange_multiplier=60.0,
                 constant=0,
             )
             # for 3 neighbours alive
             bqm.add_linear_equality_constraint(
                 terms=[(neighbour, 1) for neighbour in neighbour_list]
-                + [(this_survive, 3)],
-                lagrange_multiplier=25.0,
+                + [(this_survive, -3)],
+                lagrange_multiplier=60.0,
                 constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(this_cell, 1), (this_survive, -1)],
-                lagrange_multiplier=20.0,
+                lagrange_multiplier=240.0,
                 constant=0,
             )
             bqm.add_linear_equality_constraint(
                 terms=[(next_cell, 1), (this_survive, -1)],
-                lagrange_multiplier=40.0,
+                lagrange_multiplier=400.0,
                 constant=0,
             )
 
@@ -183,9 +184,13 @@ for t in range(time - 1):
 # read input (if any)
 for var in dict_input:
     if dict_input[var] == 1:
-        bqm.fix_variable(var, 1)
+        # bqm.fix_variable(var, 1)
+        bqm.add_linear(var, -5000)
     elif dict_input[var] == 0:
-        bqm.fix_variable(var, 0)
+        # bqm.fix_variable(var, 0)
+        bqm.add_linear(var, 5000)
+    elif dict_input[var] == 2:
+        bqm.set_linear(var, 0)
 
 
 # solve
@@ -196,7 +201,7 @@ def hybrid_solve(bqm):
     sampleset = sampler.sample(bqm, label="QGOL - H")
     solution = sampleset.first.sample
     print("Solved")
-    print(f"Solution: {solution}")
+    #print(f"Solution: {solution}")
     print(f"Energy: {sampleset.first.energy}")
     time_end = datetime.datetime.now()
     print(f"Time taken: {time_end - time_start}")
@@ -210,7 +215,21 @@ def quantum_solve(bqm):
     sampleset = sampler.sample(bqm, label="QGOL - Q", num_reads=1000)
     solution = sampleset.first.sample
     print("Solved")
-    print(f"Solution: {solution}")
+    #print(f"Solution: {solution}")
+    print(f"Energy: {sampleset.first.energy}")
+    time_end = datetime.datetime.now()
+    print(f"Time taken: {time_end - time_start}")
+    return sampleset
+
+
+def classical_solve(bqm):
+    print("Solving...")
+    time_start = datetime.datetime.now()
+    sampler = SimulatedAnnealingSampler()
+    sampleset = sampler.sample(bqm, label="QGOL - C")
+    solution = sampleset.first.sample
+    print("Solved")
+    #print(f"Solution: {solution}")
     print(f"Energy: {sampleset.first.energy}")
     time_end = datetime.datetime.now()
     print(f"Time taken: {time_end - time_start}")
@@ -249,12 +268,14 @@ print(f"Time: {time}")
 #             print()
 #     print()
 choice = input(
-    "Select solver or quit (h for hybrid, q for quantum, quit to quit) [quit]: "
+    "Select solver or quit (h for hybrid, q for quantum, c for classic, quit to quit) [quit]: "
 )
 if choice == "q":
     sampleset = quantum_solve(bqm)
 elif choice == "h":
     sampleset = hybrid_solve(bqm)
+elif choice == "c":
+    sampleset = classical_solve(bqm)
 else:
     exit()
 

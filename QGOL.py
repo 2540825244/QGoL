@@ -101,6 +101,17 @@ for t in range(time):
             print(bqm.get_linear(label_cell(x, y, t)), end=" ")
         print()
     print()
+    if t != time - 1:
+        for y in range(board_size_y):
+            for x in range(board_size_x):
+                print(bqm.get_linear(label_reproduce(x, y, t)), end=" ")
+            print()
+        print()
+        for y in range(board_size_y):
+            for x in range(board_size_x):
+                print(bqm.get_linear(label_survive(x, y, t)), end=" ")
+            print()
+    print()
 if input("Confirm? (y/n) [n]: ") != "y":
     exit()
 

@@ -81,31 +81,32 @@ for t in range(time - 1):
             this_cell = label_cell(x, y, t)
             next_cell = label_cell(x, y, t + 1)
 
-            # if a cell has more than 3 neighbours, it must be dead the next time step
-            bqm.add_linear_inequality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] +
-                [(next_cell, -10)],
-                constant=-3,
-                lb=1,
-                ub=6,
-                lagrange_multiplier=100,
-                label="overpopulation",
-            )
 
-            # if a cell has less than 2 neighbours, it must be dead the next time step
-            bqm.add_linear_inequality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_cell, +3)],
-                constant=-1,
-                ub=0,
-                lagrange_multiplier=100,
-                label="lonely",
-            )
+            # # if a cell has more than 3 neighbours, it must be dead the next time step
+            # bqm.add_linear_inequality_constraint(
+            #     [(neighbour, 1) for neighbour in neighbour_list] +
+            #     [(next_cell, -10)],
+            #     constant=-3,
+            #     lb=1,
+            #     ub=6,
+            #     lagrange_multiplier=100,
+            #     label="overpopulation",
+            # )
+
+            # # if a cell has less than 2 neighbours, it must be dead the next time step
+            # bqm.add_linear_inequality_constraint(
+            #     [(neighbour, 1) for neighbour in neighbour_list] +
+            #     [(this_cell, +3)],
+            #     constant=-1,
+            #     ub=0,
+            #     lagrange_multiplier=100,
+            #     label="lonely",
+            # )
 
             # if a cell has 3 neighbours, it must be alive the next time step
             bqm.add_linear_equality_constraint(
                 [(neighbour, 1) for neighbour in neighbour_list] +
-                [(next_cell, -4)],
+                [(next_cell, -3)],
                 constant=0,
                 lagrange_multiplier=100,
             )
@@ -122,7 +123,7 @@ for t in range(time - 1):
             # bqm.add_linear_equality_constraint(
             #     [(next_cell, 1), (this_cell, -1)],
             #     constant=0,
-            #     lagrange_multiplier=50,
+            #     lagrange_multiplier=10,
             # )
 
 

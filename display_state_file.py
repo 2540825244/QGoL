@@ -16,14 +16,17 @@ def display_state_file(file_dir):
     def label_cell(x, y, t):
         return f"x{x}y{y}t{t}"
 
-    def label_reproduce(x, y, t):
-        return f"x{x}y{y}t{t}r"
+    def label_more_than_3_neighbours(x, y, t):
+        return f"x{x}y{y}t{t}m3"
 
-    def label_survive(x, y, t):
-        return f"x{x}y{y}t{t}s"
+    def label_less_than_2_neighbours(x, y, t):
+        return f"x{x}y{y}t{t}l2"
 
-    def label_death(x, y, t):
-        return f"x{x}y{y}t{t}d"
+    def label_2_neighbours(x, y, t):
+        return f"x{x}y{y}t{t}2"
+
+    def label_3_neighbours(x, y, t):
+        return f"x{x}y{y}t{t}3"
 
     # read input
     try:
@@ -64,26 +67,32 @@ def display_state_file(file_dir):
     print(f"Time: {time}")
     for t in range(time):
         print(f"Time step {t}:")
-        print("Cell        Reproduce   Survive     Death")
+        print("Cell        N>3         N<2         N=2         N=3")
         for y in range(board_size_y):
             for x in range(board_size_x):
                 print(dict_input[label_cell(x, y, t)], end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_reproduce(x, y, t)], end=" ")
+                    print(dict_input[label_more_than_3_neighbours(x, y, t)], end=" ")
                 except:
                     print("0", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_survive(x, y, t)], end=" ")
+                    print(dict_input[label_less_than_2_neighbours(x, y, t)], end=" ")
                 except:
                     print("0", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_death(x, y, t)], end=" ")
+                    print(dict_input[label_2_neighbours(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_3_neighbours(x, y, t)], end=" ")
                 except:
                     print("0", end=" ")
             print()

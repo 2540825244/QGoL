@@ -30,18 +30,6 @@ def label_cell(x, y, t):
     return f"x{x}y{y}t{t}"
 
 
-def label_reproduce(x, y, t):
-    return f"x{x}y{y}t{t}r"
-
-
-def label_survive(x, y, t):
-    return f"x{x}y{y}t{t}s"
-
-
-def label_death(x, y, t):
-    return f"x{x}y{y}t{t}d"
-
-
 # read special variables
 board_size_x = 10  # number of steps in x axis
 board_size_y = 10  # number of steps in x axis
@@ -70,31 +58,7 @@ var_list_cell = [
     for y in range(board_size_y)
     for t in range(time)
 ]
-var_list_reproduce = [
-    label_reproduce(x, y, t)
-    for x in range(board_size_x)
-    for y in range(board_size_y)
-    for t in range(time - 1)
-]
-var_list_survive = [
-    label_survive(x, y, t)
-    for x in range(board_size_x)
-    for y in range(board_size_y)
-    for t in range(time - 1)
-]
-var_list_death = [
-    label_death(x, y, t)
-    for x in range(board_size_x)
-    for y in range(board_size_y)
-    for t in range(time - 1)
-]
 for var in var_list_cell:
-    bqm.add_variable(var, 0)
-for var in var_list_reproduce:
-    bqm.add_variable(var, 0)
-for var in var_list_survive:
-    bqm.add_variable(var, 0)
-for var in var_list_death:
     bqm.add_variable(var, 0)
 
 
@@ -116,81 +80,54 @@ for t in range(time - 1):
             neighbour_list.remove(label_cell(x, y, t))
             this_cell = label_cell(x, y, t)
             next_cell = label_cell(x, y, t + 1)
-            this_reproduce = label_reproduce(x, y, t)
-            this_survive = label_survive(x, y, t)
-            this_death = label_death(x, y, t)
 
-            # reproduce and survive are mutually exclusive
-            bqm.update(
-                combinations([this_reproduce, this_survive, this_death], 1, 500.0)
-            )
-
-            # reproduction constraints
-            # if a cell is dead and has 3 neighbours, it will reproduce
-            # the constraint below is about: Penalty = PenaltyFactor * (sum(neighbour) + 3*reproduction)**2
-            bqm.add_linear_equality_constraint(
-                terms=[(neighbour, 1) for neighbour in neighbour_list]
-                + [(this_reproduce, -3)],
-                lagrange_multiplier=120.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
-                terms=[(this_cell, 1), (this_reproduce, 1)],
-                lagrange_multiplier=240.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
-                terms=[(next_cell, 1), (this_reproduce, -1)],
-                lagrange_multiplier=400.0,
-                constant=0,
+            # if a cell has more than 3 neighbours, it must be dead the next time step
+            bqm.add_linear_inequality_constraint(
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(next_cell, -10)],
+                constant=-3,
+                lb=1,
+                ub=6,
+                lagrange_multiplier=100,
+                label="overpopulation",
             )
 
-            # survive constraints
-            # if cell is alive and has 2 or 3 neighbours, it will survive
-            # for 2 neighbours alive
-            bqm.add_linear_equality_constraint(
-                terms=[(neighbour, 1) for neighbour in neighbour_list]
-                + [(this_survive, -2)],
-                lagrange_multiplier=60.0,
-                constant=0,
-            )
-            # for 3 neighbours alive
-            bqm.add_linear_equality_constraint(
-                terms=[(neighbour, 1) for neighbour in neighbour_list]
-                + [(this_survive, -3)],
-                lagrange_multiplier=60.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
-                terms=[(this_cell, 1), (this_survive, -1)],
-                lagrange_multiplier=240.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
-                terms=[(next_cell, 1), (this_survive, -1)],
-                lagrange_multiplier=400.0,
-                constant=0,
+            # if a cell has less than 2 neighbours, it must be dead the next time step
+            bqm.add_linear_inequality_constraint(
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(this_cell, -3)],
+                constant=-1,
+                ub=1,
+                lagrange_multiplier=100,
+                label="lonely",
             )
 
-            # death constraints
-            # otherwise, the cell will die/remain dead
+            # if a cell has 3 neighbours, it must be alive the next time step
             bqm.add_linear_equality_constraint(
-                terms=[(next_cell, 1), (this_death, 1)],
-                lagrange_multiplier=20.0,
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(next_cell, -3)],
                 constant=0,
+                lagrange_multiplier=100,
+            )
+
+            # weakly presist the state of the cell
+            bqm.add_linear_equality_constraint(
+                [(this_cell, 1), (next_cell, -1)],
+                constant=0,
+                lagrange_multiplier=50,
             )
 
 
 # read input (if any)
 for var in dict_input:
     if dict_input[var] == 1:
-        # bqm.fix_variable(var, 1)
-        bqm.add_linear(var, -5000)
+        bqm.fix_variable(var, 1)
+        # bqm.add_linear(var, -5000)
     elif dict_input[var] == 0:
-        # bqm.fix_variable(var, 0)
-        bqm.add_linear(var, 5000)
-    elif dict_input[var] == 2:
-        bqm.set_linear(var, 0)
+        bqm.fix_variable(var, 0)
+        # bqm.add_linear(var, 5000)
+    # elif dict_input[var] == 2:
+    #     bqm.set_linear(var,0) 
 
 
 # solve

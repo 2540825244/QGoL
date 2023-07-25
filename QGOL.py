@@ -130,25 +130,65 @@ for t in range(time - 1):
             this_2_neighbours = label_2_neighbours(x, y, t)
             this_3_neighbours = label_3_neighbours(x, y, t)
 
+            # temp combination constraint
+            # bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=1000))
+
+            # if a cell has more than 3 neighbours
+            bqm.add_linear_inequality_constraint(
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(this_more_than_3_neighbours, 10)],
+                constant=-13,
+                lb=1,
+                ub=6,
+                lagrange_multiplier=100,
+                label=f"more_3_{this_cell}",
+            )
+
+            # if a cell has less than 2 neighbours
+            bqm.add_linear_inequality_constraint(
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(this_less_than_2_neighbours, -3)],
+                constant=2,
+                ub=0,
+                lagrange_multiplier=100,
+                label=f"lonely_{this_cell}",
+            )
+
+            # if a cell has 3 neighbours
             bqm.add_linear_equality_constraint(
                 [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_more_than_3_neighbours, 1)],
+                [(this_3_neighbours, -3)],
                 constant=0,
                 lagrange_multiplier=100,
             )
+
+            # if a cell has 2 neighbours
+            bqm.add_linear_equality_constraint(
+                [(neighbour, 1) for neighbour in neighbour_list] + 
+                [(this_2_neighbours, -2)],
+                constant=0,
+                lagrange_multiplier=100,
+            )
+
+            # # weakly presist the state
+            # bqm.add_linear_equality_constraint(
+            #     [(next_cell, 1), (this_cell, -1)],
+            #     constant=0,
+            #     lagrange_multiplier=10,
+            # )
 
 
 
 # read input (if any)
 for var in dict_input:
     if dict_input[var] == 1:
-        # bqm.fix_variable(var, 1)
-        bqm.add_linear(var, -5000)
+        bqm.fix_variable(var, 1)
+        # bqm.add_linear(var, -5000)
     elif dict_input[var] == 0:
-        # bqm.fix_variable(var, 0)
-        bqm.add_linear(var, 5000)
-    elif dict_input[var] == 2:
-        bqm.set_linear(var, 0)
+        bqm.fix_variable(var, 0)
+        # bqm.add_linear(var, 5000)
+    # elif dict_input[var] == 2:
+    #     bqm.set_linear(var, 0)
 
 
 # solve

@@ -95,9 +95,9 @@ for t in range(time - 1):
             # if a cell has less than 2 neighbours, it must be dead the next time step
             bqm.add_linear_inequality_constraint(
                 [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_cell, -3)],
+                [(this_cell, +3)],
                 constant=-1,
-                ub=1,
+                ub=0,
                 lagrange_multiplier=100,
                 label="lonely",
             )
@@ -105,17 +105,25 @@ for t in range(time - 1):
             # if a cell has 3 neighbours, it must be alive the next time step
             bqm.add_linear_equality_constraint(
                 [(neighbour, 1) for neighbour in neighbour_list] +
-                [(next_cell, -3)],
+                [(next_cell, -4)],
                 constant=0,
                 lagrange_multiplier=100,
             )
 
-            # weakly presist the state of the cell
+            # if a cell has 2 neighbours, it must be the same the next time step
             bqm.add_linear_equality_constraint(
-                [(this_cell, 1), (next_cell, -1)],
-                constant=0,
-                lagrange_multiplier=50,
+                [(next_cell, 11), (this_cell, -11)] +
+                [(neighbour, 1) for neighbour in neighbour_list],
+                constant=-2,
+                lagrange_multiplier=100,
             )
+
+            # # weakly presist the state
+            # bqm.add_linear_equality_constraint(
+            #     [(next_cell, 1), (this_cell, -1)],
+            #     constant=0,
+            #     lagrange_multiplier=50,
+            # )
 
 
 # read input (if any)

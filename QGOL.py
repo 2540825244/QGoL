@@ -21,6 +21,8 @@ from dimod.generators.constraints import combinations
 from dwave.system import LeapHybridSampler, DWaveSampler, EmbeddingComposite
 import datetime
 import sys
+
+from networkx import neighbors
 from display_state_file import display_state_file
 from neal import SimulatedAnnealingSampler
 
@@ -98,13 +100,13 @@ var_list_3_neighbours = [
 for var in var_list_cell:
     bqm.add_variable(var, 0)
 for var in var_list_more_than_3_neighbours:
-    bqm.add_variable(var, 20)
+    bqm.add_variable(var, 0)
 for var in var_list_less_than_2_neighbours:
-    bqm.add_variable(var, 20)
+    bqm.add_variable(var, 0)
 for var in var_list_2_neighbours:
-    bqm.add_variable(var, 20)
+    bqm.add_variable(var, 0)
 for var in var_list_3_neighbours:
-    bqm.add_variable(var, 20)
+    bqm.add_variable(var, 0)
 
 
 # add constraints
@@ -131,7 +133,7 @@ for t in range(time - 1):
             this_3_neighbours = label_3_neighbours(x, y, t)
 
             # temp combination constraint
-            # bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=1000))
+            # bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=100))
 
             # if a cell has more than 3 neighbours
             bqm.add_linear_equality_constraint(
@@ -150,36 +152,9 @@ for t in range(time - 1):
             )
 
             # if a cell has 3 neighbours
-            # more than  2
-            bqm.add_linear_equality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_3_neighbours, -1)],
-                constant=-2,
-                lagrange_multiplier=100,
-            )
-            # less than 4
-            bqm.add_linear_equality_constraint(
-                [(neighbour, -1) for neighbour in neighbour_list] +
-                [(this_3_neighbours, -1)],
-                constant=4,
-                lagrange_multiplier=100,
-            )
+            
 
             # if a cell has 2 neighbours
-            # more than  1
-            bqm.add_linear_equality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_2_neighbours, -1)],
-                constant=-1,
-                lagrange_multiplier=100,
-            )
-            # less than 3
-            bqm.add_linear_equality_constraint(
-                [(neighbour, -1) for neighbour in neighbour_list] +
-                [(this_2_neighbours, -1)],
-                constant=3,
-                lagrange_multiplier=100,
-            )
 
             # # weakly presist the state
             # bqm.add_linear_equality_constraint(

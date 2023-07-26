@@ -134,14 +134,11 @@ for t in range(time - 1):
             # bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=1000))
 
             # if a cell has more than 3 neighbours
-            bqm.add_linear_inequality_constraint(
+            bqm.add_linear_equality_constraint(
                 [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_more_than_3_neighbours, 10)],
-                constant=-13,
-                lb=1,
-                ub=6,
+                [(this_more_than_3_neighbours, -1)],
+                constant=-3,
                 lagrange_multiplier=100,
-                label=f"more_3_{this_cell}",
             )
 
             # if a cell has less than 2 neighbours
@@ -156,17 +153,17 @@ for t in range(time - 1):
 
             # if a cell has 3 neighbours
             bqm.add_linear_equality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_3_neighbours, -3)],
-                constant=0,
+                [(neighbour, 6) for neighbour in neighbour_list] +
+                [(this_3_neighbours, -1)],
+                constant=-17,
                 lagrange_multiplier=100,
             )
 
             # if a cell has 2 neighbours
             bqm.add_linear_equality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] + 
-                [(this_2_neighbours, -2)],
-                constant=0,
+                [(neighbour, 4) for neighbour in neighbour_list] + 
+                [(this_2_neighbours, -1)],
+                constant=-7,
                 lagrange_multiplier=100,
             )
 

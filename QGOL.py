@@ -39,10 +39,10 @@ def label_less_than_2_neighbours(x, y, t):
     return f"x{x}y{y}t{t}l2"
 
 def label_2_neighbours(x, y, t):
-    return f"x{x}y{y}t{t}2"
+    return f"x{x}y{y}t{t}e2"
 
 def label_3_neighbours(x, y, t):
-    return f"x{x}y{y}t{t}3"
+    return f"x{x}y{y}t{t}e3"
 
 
 # read special variables
@@ -133,29 +133,45 @@ for t in range(time - 1):
             this_3_neighbours = label_3_neighbours(x, y, t)
 
             # temp combination constraint
-            # bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=100))
+            bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=50))
 
             # if a cell has more than 3 neighbours
-            bqm.add_linear_equality_constraint(
+            bqm.add_linear_inequality_constraint(
                 [(neighbour, 1) for neighbour in neighbour_list] +
                 [(this_more_than_3_neighbours, -1)],
                 constant=-3,
                 lagrange_multiplier=100,
+                label=f"{this_cell}_m3"
             )
 
             # if a cell has less than 2 neighbours
-            bqm.add_linear_equality_constraint(
+            bqm.add_linear_inequality_constraint(
                 [(neighbour, -1) for neighbour in neighbour_list] +
                 [(this_less_than_2_neighbours, -1)],
                 constant=2,
                 lagrange_multiplier=100,
+                label=f"{this_cell}_l2"
             )
 
             # if a cell has 3 neighbours
-            
+            # more than 2 neighbours
+            bqm.add_linear_equality_constraint(
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(this_3_neighbours, -1)],
+                constant=-2,
+                lagrange_multiplier=70,
+            )
 
             # if a cell has 2 neighbours
+            # less than 3 neighbours
+            bqm.add_linear_equality_constraint(
+                [(neighbour, -1) for neighbour in neighbour_list] +
+                [(this_2_neighbours, -1)],
+                constant=3,
+                lagrange_multiplier=70,
+            )
 
+            
             # # weakly presist the state
             # bqm.add_linear_equality_constraint(
             #     [(next_cell, 1), (this_cell, -1)],

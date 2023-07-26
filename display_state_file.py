@@ -23,10 +23,10 @@ def display_state_file(file_dir):
         return f"x{x}y{y}t{t}l2"
 
     def label_2_neighbours(x, y, t):
-        return f"x{x}y{y}t{t}2"
+        return f"x{x}y{y}t{t}e2"
 
     def label_3_neighbours(x, y, t):
-        return f"x{x}y{y}t{t}3"
+        return f"x{x}y{y}t{t}e3"
 
     # read input
     try:

@@ -98,13 +98,13 @@ var_list_3_neighbours = [
 for var in var_list_cell:
     bqm.add_variable(var, 0)
 for var in var_list_more_than_3_neighbours:
-    bqm.add_variable(var, 0)
+    bqm.add_variable(var, 20)
 for var in var_list_less_than_2_neighbours:
-    bqm.add_variable(var, 0)
+    bqm.add_variable(var, 20)
 for var in var_list_2_neighbours:
-    bqm.add_variable(var, 0)
+    bqm.add_variable(var, 20)
 for var in var_list_3_neighbours:
-    bqm.add_variable(var, 0)
+    bqm.add_variable(var, 20)
 
 
 # add constraints
@@ -142,28 +142,42 @@ for t in range(time - 1):
             )
 
             # if a cell has less than 2 neighbours
-            bqm.add_linear_inequality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_less_than_2_neighbours, -3)],
+            bqm.add_linear_equality_constraint(
+                [(neighbour, -1) for neighbour in neighbour_list] +
+                [(this_less_than_2_neighbours, -1)],
                 constant=2,
-                ub=0,
                 lagrange_multiplier=100,
-                label=f"lonely_{this_cell}",
             )
 
             # if a cell has 3 neighbours
+            # more than  2
             bqm.add_linear_equality_constraint(
-                [(neighbour, 6) for neighbour in neighbour_list] +
+                [(neighbour, 1) for neighbour in neighbour_list] +
                 [(this_3_neighbours, -1)],
-                constant=-17,
+                constant=-2,
+                lagrange_multiplier=100,
+            )
+            # less than 4
+            bqm.add_linear_equality_constraint(
+                [(neighbour, -1) for neighbour in neighbour_list] +
+                [(this_3_neighbours, -1)],
+                constant=4,
                 lagrange_multiplier=100,
             )
 
             # if a cell has 2 neighbours
+            # more than  1
             bqm.add_linear_equality_constraint(
-                [(neighbour, 4) for neighbour in neighbour_list] + 
+                [(neighbour, 1) for neighbour in neighbour_list] +
                 [(this_2_neighbours, -1)],
-                constant=-7,
+                constant=-1,
+                lagrange_multiplier=100,
+            )
+            # less than 3
+            bqm.add_linear_equality_constraint(
+                [(neighbour, -1) for neighbour in neighbour_list] +
+                [(this_2_neighbours, -1)],
+                constant=3,
                 lagrange_multiplier=100,
             )
 

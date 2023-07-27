@@ -5,15 +5,24 @@ shown after one another
 """
 
 
-
-
 def display_state_file(file_dir):
     # import modules
     import sys
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     import numpy as np
-    from labels import (label_cell, label_more_than_3_neighbours, label_less_than_2_neighbours, label_2_neighbours, label_2_neighbours_helper_a, label_2_neighbours_helper_b, label_2_neighbours_helper_c, label_3_neighbours, label_3_neighbours_helper_a, label_3_neighbours_helper_b)
+    from labels import (
+        label_cell,
+        label_more_than_3_neighbours,
+        label_less_than_2_neighbours,
+        label_2_neighbours,
+        label_2_neighbours_helper_a,
+        label_2_neighbours_helper_b,
+        label_2_neighbours_helper_c,
+        label_3_neighbours,
+        label_3_neighbours_helper_a,
+        label_3_neighbours_helper_b,
+    )
 
     # read input
     try:

@@ -161,95 +161,151 @@ for t in range(time - 1):
             this_3_neighbours_helper_a = label_3_neighbours_helper_a(x, y, t)
             this_3_neighbours_helper_b = label_3_neighbours_helper_b(x, y, t)
 
+            overall_strength_factor = 1
+
             # temp combination constraint
-            bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=50))
+            bqm.update(
+                combinations(
+                    [
+                        this_more_than_3_neighbours,
+                        this_less_than_2_neighbours,
+                        this_2_neighbours,
+                        this_3_neighbours,
+                    ],
+                    1,
+                    strength=50 * overall_strength_factor,
+                )
+            )
 
             # same as next time constraint
             # penalty function in the form
 
             # if a cell has more than 3 neighbours
             bqm.add_linear_equality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_more_than_3_neighbours, -1)],
-                constant=-3,
-                lagrange_multiplier=100,
+                [(neighbour, 1) for neighbour in neighbour_list]
+                + [(this_more_than_3_neighbours, -1)],
+                constant=-3 * overall_strength_factor,
+                lagrange_multiplier=100 * overall_strength_factor,
             )
 
             # if a cell has less than 2 neighbours
             bqm.add_linear_equality_constraint(
-                [(neighbour, -1) for neighbour in neighbour_list] +
-                [(this_less_than_2_neighbours, -1)],
-                constant=2,
-                lagrange_multiplier=100,
+                [(neighbour, -1) for neighbour in neighbour_list]
+                + [(this_less_than_2_neighbours, -1)],
+                constant=2 * overall_strength_factor,
+                lagrange_multiplier=100 * overall_strength_factor,
             )
 
             # if a cell has 3 neighbours
             # more than 2 neighbours
             bqm.add_linear_equality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_3_neighbours_helper_a, -1)],
-                constant=-2,
-                lagrange_multiplier=70,
+                [(neighbour, 1) for neighbour in neighbour_list]
+                + [(this_3_neighbours_helper_a, -1)],
+                constant=-2 * overall_strength_factor,
+                lagrange_multiplier=70 * overall_strength_factor,
             )
             # less than 4 neighbours
             bqm.add_linear_equality_constraint(
-                [(neighbour, -1) for neighbour in neighbour_list] +
-                [(this_3_neighbours_helper_b, -1)],
-                constant=4,
-                lagrange_multiplier=70,
+                [(neighbour, -1) for neighbour in neighbour_list]
+                + [(this_3_neighbours_helper_b, -1)],
+                constant=4 * overall_strength_factor,
+                lagrange_multiplier=70 * overall_strength_factor,
             )
             # using and gate, get the 3 neighbours flag
-            bqm.update(and_gate(this_3_neighbours_helper_a, this_3_neighbours_helper_b, this_3_neighbours, strength=100))
+            bqm.update(
+                and_gate(
+                    this_3_neighbours_helper_a,
+                    this_3_neighbours_helper_b,
+                    this_3_neighbours,
+                    strength=100 * overall_strength_factor,
+                )
+            )
 
             # if a cell has 2 neighbours
             # more than 1 neighbours
             bqm.add_linear_equality_constraint(
-                [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_2_neighbours_helper_a, -1)],
-                constant=-1,
-                lagrange_multiplier=70,
+                [(neighbour, 1) for neighbour in neighbour_list]
+                + [(this_2_neighbours_helper_a, -1)],
+                constant=-1 * overall_strength_factor,
+                lagrange_multiplier=70 * overall_strength_factor,
             )
             # less than 3 neighbours
             bqm.add_linear_equality_constraint(
-                [(neighbour, -1) for neighbour in neighbour_list] +
-                [(this_2_neighbours_helper_b, -1)],
-                constant=3,
-                lagrange_multiplier=70,
+                [(neighbour, -1) for neighbour in neighbour_list]
+                + [(this_2_neighbours_helper_b, -1)],
+                constant=3 * overall_strength_factor,
+                lagrange_multiplier=70 * overall_strength_factor,
             )
             # using and gate, get the 2 neighbours flag
-            bqm.update(and_gate(this_2_neighbours_helper_a, this_2_neighbours_helper_b, this_2_neighbours, strength=100))
-            
+            bqm.update(
+                and_gate(
+                    this_2_neighbours_helper_a,
+                    this_2_neighbours_helper_b,
+                    this_2_neighbours,
+                    strength=100 * overall_strength_factor,
+                )
+            )
+
             # # for more than 3 neighbours and less than 2 neighbours, the cell is dead the next time step
-            bqm.add_quadratic(this_more_than_3_neighbours, next_cell, 50)
-            bqm.add_quadratic(this_less_than_2_neighbours, next_cell, 50)
+            bqm.add_quadratic(
+                this_more_than_3_neighbours, next_cell, 50 * overall_strength_factor
+            )
+            bqm.add_quadratic(
+                this_less_than_2_neighbours, next_cell, 50 * overall_strength_factor
+            )
 
             # for 3 neighbours, the cell is alive the next time step
-            bqm.add_quadratic(this_3_neighbours, next_cell, -75)
+            bqm.add_quadratic(
+                this_3_neighbours, next_cell, -75 * overall_strength_factor
+            )
 
             # for 2 neighbours, the cell is the same as this time step the next time step
             # penalty function is: -E2+E2T+E2N-2E2TN
             # TN is reduced to helper c by and gate
             # so final penalty function is: -E2+E2T+E2N-2E2C
             two_neighbours_penalty_factor = 25
-            bqm.update(and_gate(this_cell, next_cell, this_2_neighbours_helper_c, strength=2*two_neighbours_penalty_factor))
-            bqm.add_linear(this_2_neighbours, -two_neighbours_penalty_factor)
-            bqm.add_quadratic(this_2_neighbours, this_cell, two_neighbours_penalty_factor)
-            bqm.add_quadratic(this_2_neighbours, next_cell, two_neighbours_penalty_factor)
-            bqm.add_quadratic(this_2_neighbours, this_2_neighbours_helper_c, -two_neighbours_penalty_factor * 2)
+            bqm.update(
+                and_gate(
+                    this_cell,
+                    next_cell,
+                    this_2_neighbours_helper_c,
+                    strength=2
+                    * two_neighbours_penalty_factor
+                    * overall_strength_factor,
+                )
+            )
+            bqm.add_linear(
+                this_2_neighbours,
+                -two_neighbours_penalty_factor * overall_strength_factor,
+            )
+            bqm.add_quadratic(
+                this_2_neighbours,
+                this_cell,
+                two_neighbours_penalty_factor * overall_strength_factor,
+            )
+            bqm.add_quadratic(
+                this_2_neighbours,
+                next_cell,
+                two_neighbours_penalty_factor * overall_strength_factor,
+            )
+            bqm.add_quadratic(
+                this_2_neighbours,
+                this_2_neighbours_helper_c,
+                -two_neighbours_penalty_factor * 2 * overall_strength_factor,
+            )
 
             # make helper c only true when the E2 is true
             # penalty function is: C-E2C
             helper_c_penalty_factor = 25
-            bqm.add_linear(this_2_neighbours_helper_c, helper_c_penalty_factor)
-            bqm.add_quadratic(this_2_neighbours_helper_c, this_2_neighbours, -helper_c_penalty_factor)
-
-            # # weakly presist the state
-            # bqm.add_linear_equality_constraint(
-            #     [(this_cell, 1), (next_cell, -1)],
-            #     constant=0,
-            #     lagrange_multiplier=25,
-            # )
-
+            bqm.add_linear(
+                this_2_neighbours_helper_c,
+                helper_c_penalty_factor * overall_strength_factor,
+            )
+            bqm.add_quadratic(
+                this_2_neighbours_helper_c,
+                this_2_neighbours,
+                -helper_c_penalty_factor * overall_strength_factor,
+            )
 
 
 # read input (if any)
@@ -272,7 +328,7 @@ def hybrid_solve(bqm):
     sampleset = sampler.sample(bqm, label="QGOL - H")
     solution = sampleset.first.sample
     print("Solved")
-    #print(f"Solution: {solution}")
+    # print(f"Solution: {solution}")
     print(f"Energy: {sampleset.first.energy}")
     time_end = datetime.datetime.now()
     print(f"Time taken: {time_end - time_start}")
@@ -282,11 +338,11 @@ def hybrid_solve(bqm):
 def quantum_solve(bqm):
     print("Solving...")
     time_start = datetime.datetime.now()
-    sampler = EmbeddingComposite(DWaveSampler(solver={'topology__type': 'zephyr'}))
+    sampler = EmbeddingComposite(DWaveSampler(solver={"topology__type": "zephyr"}))
     sampleset = sampler.sample(bqm, label="QGOL - Q", num_reads=1000)
     solution = sampleset.first.sample
     print("Solved")
-    #print(f"Solution: {solution}")
+    # print(f"Solution: {solution}")
     print(f"Energy: {sampleset.first.energy}")
     time_end = datetime.datetime.now()
     print(f"Time taken: {time_end - time_start}")
@@ -302,7 +358,7 @@ def classical_solve(bqm):
     sampleset = sampler.sample(bqm, label="QGOL - C")
     solution = sampleset.first.sample
     print("Solved")
-    #print(f"Solution: {solution}")
+    # print(f"Solution: {solution}")
     print(f"Energy: {sampleset.first.energy}")
     time_end = datetime.datetime.now()
     print(f"Time taken: {time_end - time_start}")

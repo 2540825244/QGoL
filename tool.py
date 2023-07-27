@@ -1,9 +1,10 @@
-'''
+"""
 misc functions and tools, not a library
-'''
+"""
 
 import sympy as sp
 import numpy as np
+
 
 def expand_penalty_for_3_neighbours():
     E = sp.Symbol("E3")
@@ -15,9 +16,8 @@ def expand_penalty_for_3_neighbours():
     # and P is a constant
 
     # expand the penalty
-    penalty = sp.expand(P*(-E-(sum(Ns))**2+6*sum(Ns)-8)**2)
+    penalty = sp.expand(P * (-E - (sum(Ns)) ** 2 + 6 * sum(Ns) - 8) ** 2)
     print(penalty)
-
 
 
 if __name__ == "__main__":

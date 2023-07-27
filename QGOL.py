@@ -20,6 +20,7 @@ from dimod import BinaryQuadraticModel
 from dimod.generators.constraints import combinations
 from dimod.generators import and_gate
 from dwave.system import LeapHybridSampler, DWaveSampler, EmbeddingComposite
+import dwave.inspector
 import datetime
 import sys
 
@@ -86,6 +87,12 @@ var_list_2_neighbours_helper_b = [
     for y in range(board_size_y)
     for t in range(time - 1)
 ]
+var_list_2_neighbours_helper_c = [
+    label_2_neighbours_helper_c(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
 var_list_3_neighbours = [
     label_3_neighbours(x, y, t)
     for x in range(board_size_x)
@@ -115,6 +122,8 @@ for var in var_list_2_neighbours:
 for var in var_list_2_neighbours_helper_a:
     bqm.add_variable(var, 0)
 for var in var_list_2_neighbours_helper_b:
+    bqm.add_variable(var, 0)
+for var in var_list_2_neighbours_helper_c:
     bqm.add_variable(var, 0)
 for var in var_list_3_neighbours:
     bqm.add_variable(var, 0)
@@ -147,12 +156,13 @@ for t in range(time - 1):
             this_2_neighbours = label_2_neighbours(x, y, t)
             this_2_neighbours_helper_a = label_2_neighbours_helper_a(x, y, t)
             this_2_neighbours_helper_b = label_2_neighbours_helper_b(x, y, t)
+            this_2_neighbours_helper_c = label_2_neighbours_helper_c(x, y, t)
             this_3_neighbours = label_3_neighbours(x, y, t)
             this_3_neighbours_helper_a = label_3_neighbours_helper_a(x, y, t)
             this_3_neighbours_helper_b = label_3_neighbours_helper_b(x, y, t)
 
             # temp combination constraint
-            # bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=50))
+            bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=50))
 
             # same as next time constraint
             # penalty function in the form
@@ -210,25 +220,35 @@ for t in range(time - 1):
             bqm.update(and_gate(this_2_neighbours_helper_a, this_2_neighbours_helper_b, this_2_neighbours, strength=100))
             
             # # for more than 3 neighbours and less than 2 neighbours, the cell is dead the next time step
-            bqm.add_quadratic(this_more_than_3_neighbours, next_cell, 25)
-            bqm.add_quadratic(this_less_than_2_neighbours, next_cell, 25)
+            bqm.add_quadratic(this_more_than_3_neighbours, next_cell, 50)
+            bqm.add_quadratic(this_less_than_2_neighbours, next_cell, 50)
 
             # for 3 neighbours, the cell is alive the next time step
-            bqm.add_quadratic(this_3_neighbours, next_cell, -50)
+            bqm.add_quadratic(this_3_neighbours, next_cell, -75)
 
             # for 2 neighbours, the cell is the same as this time step the next time step
-            # bqm.add_linear_equality_constraint(
-            #     [(this_2_neighbours, 2), (next_cell, -1), (this_cell, 1)],
-            #     constant=-2,
-            #     lagrange_multiplier=5,
-            # )
+            # penalty function is: -E2+E2T+E2N-2E2TN
+            # TN is reduced to helper c by and gate
+            # so final penalty function is: -E2+E2T+E2N-2E2C
+            two_neighbours_penalty_factor = 25
+            bqm.update(and_gate(this_cell, next_cell, this_2_neighbours_helper_c, strength=2*two_neighbours_penalty_factor))
+            bqm.add_linear(this_2_neighbours, -two_neighbours_penalty_factor)
+            bqm.add_quadratic(this_2_neighbours, this_cell, two_neighbours_penalty_factor)
+            bqm.add_quadratic(this_2_neighbours, next_cell, two_neighbours_penalty_factor)
+            bqm.add_quadratic(this_2_neighbours, this_2_neighbours_helper_c, -two_neighbours_penalty_factor * 2)
 
-            # weakly presist the state
-            bqm.add_linear_equality_constraint(
-                [(this_cell, 1), (next_cell, -1)],
-                constant=0,
-                lagrange_multiplier=20,
-            )
+            # make helper c only true when the E2 is true
+            # penalty function is: C-E2C
+            helper_c_penalty_factor = 25
+            bqm.add_linear(this_2_neighbours_helper_c, helper_c_penalty_factor)
+            bqm.add_quadratic(this_2_neighbours_helper_c, this_2_neighbours, -helper_c_penalty_factor)
+
+            # # weakly presist the state
+            # bqm.add_linear_equality_constraint(
+            #     [(this_cell, 1), (next_cell, -1)],
+            #     constant=0,
+            #     lagrange_multiplier=25,
+            # )
 
 
 
@@ -262,7 +282,7 @@ def hybrid_solve(bqm):
 def quantum_solve(bqm):
     print("Solving...")
     time_start = datetime.datetime.now()
-    sampler = EmbeddingComposite(DWaveSampler())
+    sampler = EmbeddingComposite(DWaveSampler(solver={'topology__type': 'zephyr'}))
     sampleset = sampler.sample(bqm, label="QGOL - Q", num_reads=1000)
     solution = sampleset.first.sample
     print("Solved")
@@ -270,6 +290,8 @@ def quantum_solve(bqm):
     print(f"Energy: {sampleset.first.energy}")
     time_end = datetime.datetime.now()
     print(f"Time taken: {time_end - time_start}")
+    # calls inspector
+    dwave.inspector.show(sampleset)
     return sampleset
 
 

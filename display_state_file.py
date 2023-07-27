@@ -5,25 +5,15 @@ shown after one another
 """
 
 
+
+
 def display_state_file(file_dir):
     # import modules
     import sys
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     import numpy as np
-
-    # label generator
-    def label_cell(x, y, t):
-        return f"x{x}y{y}t{t}"
-
-    def label_reproduce(x, y, t):
-        return f"x{x}y{y}t{t}r"
-
-    def label_survive(x, y, t):
-        return f"x{x}y{y}t{t}s"
-
-    def label_death(x, y, t):
-        return f"x{x}y{y}t{t}d"
+    from labels import (label_cell, label_more_than_3_neighbours, label_less_than_2_neighbours, label_2_neighbours, label_2_neighbours_helper_a, label_2_neighbours_helper_b, label_2_neighbours_helper_c, label_3_neighbours, label_3_neighbours_helper_a, label_3_neighbours_helper_b)
 
     # read input
     try:
@@ -64,26 +54,65 @@ def display_state_file(file_dir):
     print(f"Time: {time}")
     for t in range(time):
         print(f"Time step {t}:")
-        print("Cell        Reproduce   Survive     Death")
+        print("Cell        N>3         N<2         N=2         N=3")
         for y in range(board_size_y):
             for x in range(board_size_x):
                 print(dict_input[label_cell(x, y, t)], end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_reproduce(x, y, t)], end=" ")
+                    print(dict_input[label_more_than_3_neighbours(x, y, t)], end=" ")
                 except:
                     print("0", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_survive(x, y, t)], end=" ")
+                    print(dict_input[label_less_than_2_neighbours(x, y, t)], end=" ")
                 except:
                     print("0", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_death(x, y, t)], end=" ")
+                    print(dict_input[label_2_neighbours(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_3_neighbours(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print()
+        print()
+        print("N=2 Helper A and B and C            N=3 Helper A and B")
+        for y in range(board_size_y):
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_2_neighbours_helper_a(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_2_neighbours_helper_b(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_2_neighbours_helper_c(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_3_neighbours_helper_a(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_3_neighbours_helper_b(x, y, t)], end=" ")
                 except:
                     print("0", end=" ")
             print()

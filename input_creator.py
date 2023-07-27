@@ -83,6 +83,8 @@ def main():
                         print(dict_input[label(x, y, t)], end=" ")
                     print()
                 print()
+        elif command == "quit":
+            return
 
     # write the input to file
     try:

@@ -18,29 +18,16 @@ if no output file is selected, the states are saved to "output.txt"
 # import modules
 from dimod import BinaryQuadraticModel
 from dimod.generators.constraints import combinations
+from dimod.generators import and_gate
 from dwave.system import LeapHybridSampler, DWaveSampler, EmbeddingComposite
+import dwave.inspector
 import datetime
 import sys
+
 from display_state_file import display_state_file
 from neal import SimulatedAnnealingSampler
 
-
-# label generator
-def label_cell(x, y, t):
-    return f"x{x}y{y}t{t}"
-
-
-def label_reproduce(x, y, t):
-    return f"x{x}y{y}t{t}r"
-
-
-def label_survive(x, y, t):
-    return f"x{x}y{y}t{t}s"
-
-
-def label_death(x, y, t):
-    return f"x{x}y{y}t{t}d"
-
+from labels import *
 
 # read special variables
 board_size_x = 10  # number of steps in x axis
@@ -68,33 +55,81 @@ var_list_cell = [
     label_cell(x, y, t)
     for x in range(board_size_x)
     for y in range(board_size_y)
-    for t in range(time)
+    for t in range(time - 1)
 ]
-var_list_reproduce = [
-    label_reproduce(x, y, t)
+var_list_more_than_3_neighbours = [
+    label_more_than_3_neighbours(x, y, t)
     for x in range(board_size_x)
     for y in range(board_size_y)
     for t in range(time - 1)
 ]
-var_list_survive = [
-    label_survive(x, y, t)
+var_list_less_than_2_neighbours = [
+    label_less_than_2_neighbours(x, y, t)
     for x in range(board_size_x)
     for y in range(board_size_y)
     for t in range(time - 1)
 ]
-var_list_death = [
-    label_death(x, y, t)
+var_list_2_neighbours = [
+    label_2_neighbours(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
+var_list_2_neighbours_helper_a = [
+    label_2_neighbours_helper_a(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
+var_list_2_neighbours_helper_b = [
+    label_2_neighbours_helper_b(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
+var_list_2_neighbours_helper_c = [
+    label_2_neighbours_helper_c(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
+var_list_3_neighbours = [
+    label_3_neighbours(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
+var_list_3_neighbours_helper_a = [
+    label_3_neighbours_helper_a(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
+var_list_3_neighbours_helper_b = [
+    label_3_neighbours_helper_b(x, y, t)
     for x in range(board_size_x)
     for y in range(board_size_y)
     for t in range(time - 1)
 ]
 for var in var_list_cell:
     bqm.add_variable(var, 0)
-for var in var_list_reproduce:
+for var in var_list_more_than_3_neighbours:
     bqm.add_variable(var, 0)
-for var in var_list_survive:
+for var in var_list_less_than_2_neighbours:
     bqm.add_variable(var, 0)
-for var in var_list_death:
+for var in var_list_2_neighbours:
+    bqm.add_variable(var, 0)
+for var in var_list_2_neighbours_helper_a:
+    bqm.add_variable(var, 0)
+for var in var_list_2_neighbours_helper_b:
+    bqm.add_variable(var, 0)
+for var in var_list_2_neighbours_helper_c:
+    bqm.add_variable(var, 0)
+for var in var_list_3_neighbours:
+    bqm.add_variable(var, 0)
+for var in var_list_3_neighbours_helper_a:
+    bqm.add_variable(var, 0)
+for var in var_list_3_neighbours_helper_b:
     bqm.add_variable(var, 0)
 
 
@@ -116,81 +151,117 @@ for t in range(time - 1):
             neighbour_list.remove(label_cell(x, y, t))
             this_cell = label_cell(x, y, t)
             next_cell = label_cell(x, y, t + 1)
-            this_reproduce = label_reproduce(x, y, t)
-            this_survive = label_survive(x, y, t)
-            this_death = label_death(x, y, t)
+            this_more_than_3_neighbours = label_more_than_3_neighbours(x, y, t)
+            this_less_than_2_neighbours = label_less_than_2_neighbours(x, y, t)
+            this_2_neighbours = label_2_neighbours(x, y, t)
+            this_2_neighbours_helper_a = label_2_neighbours_helper_a(x, y, t)
+            this_2_neighbours_helper_b = label_2_neighbours_helper_b(x, y, t)
+            this_2_neighbours_helper_c = label_2_neighbours_helper_c(x, y, t)
+            this_3_neighbours = label_3_neighbours(x, y, t)
+            this_3_neighbours_helper_a = label_3_neighbours_helper_a(x, y, t)
+            this_3_neighbours_helper_b = label_3_neighbours_helper_b(x, y, t)
 
-            # reproduce and survive are mutually exclusive
-            bqm.update(
-                combinations([this_reproduce, this_survive, this_death], 1, 500.0)
-            )
+            # temp combination constraint
+            bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=50))
 
-            # reproduction constraints
-            # if a cell is dead and has 3 neighbours, it will reproduce
-            # the constraint below is about: Penalty = PenaltyFactor * (sum(neighbour) + 3*reproduction)**2
+            # same as next time constraint
+            # penalty function in the form
+
+            # if a cell has more than 3 neighbours
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour, 1) for neighbour in neighbour_list]
-                + [(this_reproduce, -3)],
-                lagrange_multiplier=120.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
-                terms=[(this_cell, 1), (this_reproduce, 1)],
-                lagrange_multiplier=240.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
-                terms=[(next_cell, 1), (this_reproduce, -1)],
-                lagrange_multiplier=400.0,
-                constant=0,
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(this_more_than_3_neighbours, -1)],
+                constant=-3,
+                lagrange_multiplier=100,
             )
 
-            # survive constraints
-            # if cell is alive and has 2 or 3 neighbours, it will survive
-            # for 2 neighbours alive
+            # if a cell has less than 2 neighbours
             bqm.add_linear_equality_constraint(
-                terms=[(neighbour, 1) for neighbour in neighbour_list]
-                + [(this_survive, -2)],
-                lagrange_multiplier=60.0,
-                constant=0,
-            )
-            # for 3 neighbours alive
-            bqm.add_linear_equality_constraint(
-                terms=[(neighbour, 1) for neighbour in neighbour_list]
-                + [(this_survive, -3)],
-                lagrange_multiplier=60.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
-                terms=[(this_cell, 1), (this_survive, -1)],
-                lagrange_multiplier=240.0,
-                constant=0,
-            )
-            bqm.add_linear_equality_constraint(
-                terms=[(next_cell, 1), (this_survive, -1)],
-                lagrange_multiplier=400.0,
-                constant=0,
+                [(neighbour, -1) for neighbour in neighbour_list] +
+                [(this_less_than_2_neighbours, -1)],
+                constant=2,
+                lagrange_multiplier=100,
             )
 
-            # death constraints
-            # otherwise, the cell will die/remain dead
+            # if a cell has 3 neighbours
+            # more than 2 neighbours
             bqm.add_linear_equality_constraint(
-                terms=[(next_cell, 1), (this_death, 1)],
-                lagrange_multiplier=20.0,
-                constant=0,
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(this_3_neighbours_helper_a, -1)],
+                constant=-2,
+                lagrange_multiplier=70,
             )
+            # less than 4 neighbours
+            bqm.add_linear_equality_constraint(
+                [(neighbour, -1) for neighbour in neighbour_list] +
+                [(this_3_neighbours_helper_b, -1)],
+                constant=4,
+                lagrange_multiplier=70,
+            )
+            # using and gate, get the 3 neighbours flag
+            bqm.update(and_gate(this_3_neighbours_helper_a, this_3_neighbours_helper_b, this_3_neighbours, strength=100))
+
+            # if a cell has 2 neighbours
+            # more than 1 neighbours
+            bqm.add_linear_equality_constraint(
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(this_2_neighbours_helper_a, -1)],
+                constant=-1,
+                lagrange_multiplier=70,
+            )
+            # less than 3 neighbours
+            bqm.add_linear_equality_constraint(
+                [(neighbour, -1) for neighbour in neighbour_list] +
+                [(this_2_neighbours_helper_b, -1)],
+                constant=3,
+                lagrange_multiplier=70,
+            )
+            # using and gate, get the 2 neighbours flag
+            bqm.update(and_gate(this_2_neighbours_helper_a, this_2_neighbours_helper_b, this_2_neighbours, strength=100))
+            
+            # # for more than 3 neighbours and less than 2 neighbours, the cell is dead the next time step
+            bqm.add_quadratic(this_more_than_3_neighbours, next_cell, 50)
+            bqm.add_quadratic(this_less_than_2_neighbours, next_cell, 50)
+
+            # for 3 neighbours, the cell is alive the next time step
+            bqm.add_quadratic(this_3_neighbours, next_cell, -75)
+
+            # for 2 neighbours, the cell is the same as this time step the next time step
+            # penalty function is: -E2+E2T+E2N-2E2TN
+            # TN is reduced to helper c by and gate
+            # so final penalty function is: -E2+E2T+E2N-2E2C
+            two_neighbours_penalty_factor = 25
+            bqm.update(and_gate(this_cell, next_cell, this_2_neighbours_helper_c, strength=2*two_neighbours_penalty_factor))
+            bqm.add_linear(this_2_neighbours, -two_neighbours_penalty_factor)
+            bqm.add_quadratic(this_2_neighbours, this_cell, two_neighbours_penalty_factor)
+            bqm.add_quadratic(this_2_neighbours, next_cell, two_neighbours_penalty_factor)
+            bqm.add_quadratic(this_2_neighbours, this_2_neighbours_helper_c, -two_neighbours_penalty_factor * 2)
+
+            # make helper c only true when the E2 is true
+            # penalty function is: C-E2C
+            helper_c_penalty_factor = 25
+            bqm.add_linear(this_2_neighbours_helper_c, helper_c_penalty_factor)
+            bqm.add_quadratic(this_2_neighbours_helper_c, this_2_neighbours, -helper_c_penalty_factor)
+
+            # # weakly presist the state
+            # bqm.add_linear_equality_constraint(
+            #     [(this_cell, 1), (next_cell, -1)],
+            #     constant=0,
+            #     lagrange_multiplier=25,
+            # )
+
 
 
 # read input (if any)
 for var in dict_input:
     if dict_input[var] == 1:
-        # bqm.fix_variable(var, 1)
-        bqm.add_linear(var, -5000)
+        bqm.fix_variable(var, 1)
+        # bqm.add_linear(var, -5000)
     elif dict_input[var] == 0:
-        # bqm.fix_variable(var, 0)
-        bqm.add_linear(var, 5000)
-    elif dict_input[var] == 2:
-        bqm.set_linear(var, 0)
+        bqm.fix_variable(var, 0)
+        # bqm.add_linear(var, 5000)
+    # elif dict_input[var] == 2:
+    #     bqm.set_linear(var, 0)
 
 
 # solve
@@ -211,7 +282,7 @@ def hybrid_solve(bqm):
 def quantum_solve(bqm):
     print("Solving...")
     time_start = datetime.datetime.now()
-    sampler = EmbeddingComposite(DWaveSampler())
+    sampler = EmbeddingComposite(DWaveSampler(solver={'topology__type': 'zephyr'}))
     sampleset = sampler.sample(bqm, label="QGOL - Q", num_reads=1000)
     solution = sampleset.first.sample
     print("Solved")
@@ -219,6 +290,8 @@ def quantum_solve(bqm):
     print(f"Energy: {sampleset.first.energy}")
     time_end = datetime.datetime.now()
     print(f"Time taken: {time_end - time_start}")
+    # calls inspector
+    dwave.inspector.show(sampleset)
     return sampleset
 
 

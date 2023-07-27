@@ -84,7 +84,7 @@ def display_state_file(file_dir):
                     print("0", end=" ")
             print()
         print()
-        print("N=2 Helper A and B      N=3 Helper A and B")
+        print("N=2 Helper A and B      N=3 Helper A and B      Same")
         for y in range(board_size_y):
             for x in range(board_size_x):
                 try:
@@ -107,6 +107,12 @@ def display_state_file(file_dir):
             for x in range(board_size_x):
                 try:
                     print(dict_input[label_3_neighbours_helper_b(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_same_as_next_time(x, y, t)], end=" ")
                 except:
                     print("0", end=" ")
             print()

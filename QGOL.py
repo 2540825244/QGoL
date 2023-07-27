@@ -18,32 +18,15 @@ if no output file is selected, the states are saved to "output.txt"
 # import modules
 from dimod import BinaryQuadraticModel
 from dimod.generators.constraints import combinations
+from dimod.generators import and_gate
 from dwave.system import LeapHybridSampler, DWaveSampler, EmbeddingComposite
 import datetime
 import sys
 
-from networkx import neighbors
 from display_state_file import display_state_file
 from neal import SimulatedAnnealingSampler
 
-
-# label generator
-def label_cell(x, y, t):
-    return f"x{x}y{y}t{t}"
-
-
-def label_more_than_3_neighbours(x, y, t):
-    return f"x{x}y{y}t{t}m3"
-
-def label_less_than_2_neighbours(x, y, t):
-    return f"x{x}y{y}t{t}l2"
-
-def label_2_neighbours(x, y, t):
-    return f"x{x}y{y}t{t}e2"
-
-def label_3_neighbours(x, y, t):
-    return f"x{x}y{y}t{t}e3"
-
+from labels import *
 
 # read special variables
 board_size_x = 10  # number of steps in x axis
@@ -71,33 +54,65 @@ var_list_cell = [
     label_cell(x, y, t)
     for x in range(board_size_x)
     for y in range(board_size_y)
-    for t in range(time)
+    for t in range(time - 1)
+]
+var_list_same_as_next_time = [
+    label_same_as_next_time(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
 ]
 var_list_more_than_3_neighbours = [
     label_more_than_3_neighbours(x, y, t)
     for x in range(board_size_x)
     for y in range(board_size_y)
-    for t in range(time)
+    for t in range(time - 1)
 ]
 var_list_less_than_2_neighbours = [
     label_less_than_2_neighbours(x, y, t)
     for x in range(board_size_x)
     for y in range(board_size_y)
-    for t in range(time)
+    for t in range(time - 1)
 ]
 var_list_2_neighbours = [
     label_2_neighbours(x, y, t)
     for x in range(board_size_x)
     for y in range(board_size_y)
-    for t in range(time)
+    for t in range(time - 1)
+]
+var_list_2_neighbours_helper_a = [
+    label_2_neighbours_helper_a(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
+var_list_2_neighbours_helper_b = [
+    label_2_neighbours_helper_b(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
 ]
 var_list_3_neighbours = [
     label_3_neighbours(x, y, t)
     for x in range(board_size_x)
     for y in range(board_size_y)
-    for t in range(time)
+    for t in range(time - 1)
+]
+var_list_3_neighbours_helper_a = [
+    label_3_neighbours_helper_a(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
+]
+var_list_3_neighbours_helper_b = [
+    label_3_neighbours_helper_b(x, y, t)
+    for x in range(board_size_x)
+    for y in range(board_size_y)
+    for t in range(time - 1)
 ]
 for var in var_list_cell:
+    bqm.add_variable(var, 0)
+for var in var_list_same_as_next_time:
     bqm.add_variable(var, 0)
 for var in var_list_more_than_3_neighbours:
     bqm.add_variable(var, 0)
@@ -105,7 +120,15 @@ for var in var_list_less_than_2_neighbours:
     bqm.add_variable(var, 0)
 for var in var_list_2_neighbours:
     bqm.add_variable(var, 0)
+for var in var_list_2_neighbours_helper_a:
+    bqm.add_variable(var, 0)
+for var in var_list_2_neighbours_helper_b:
+    bqm.add_variable(var, 0)
 for var in var_list_3_neighbours:
+    bqm.add_variable(var, 0)
+for var in var_list_3_neighbours_helper_a:
+    bqm.add_variable(var, 0)
+for var in var_list_3_neighbours_helper_b:
     bqm.add_variable(var, 0)
 
 
@@ -127,56 +150,90 @@ for t in range(time - 1):
             neighbour_list.remove(label_cell(x, y, t))
             this_cell = label_cell(x, y, t)
             next_cell = label_cell(x, y, t + 1)
+            this_same_as_next_time = label_same_as_next_time(x, y, t)
             this_more_than_3_neighbours = label_more_than_3_neighbours(x, y, t)
             this_less_than_2_neighbours = label_less_than_2_neighbours(x, y, t)
             this_2_neighbours = label_2_neighbours(x, y, t)
+            this_2_neighbours_helper_a = label_2_neighbours_helper_a(x, y, t)
+            this_2_neighbours_helper_b = label_2_neighbours_helper_b(x, y, t)
             this_3_neighbours = label_3_neighbours(x, y, t)
+            this_3_neighbours_helper_a = label_3_neighbours_helper_a(x, y, t)
+            this_3_neighbours_helper_b = label_3_neighbours_helper_b(x, y, t)
 
             # temp combination constraint
-            bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=50))
+            # bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=50))
 
             # if a cell has more than 3 neighbours
-            bqm.add_linear_inequality_constraint(
+            bqm.add_linear_equality_constraint(
                 [(neighbour, 1) for neighbour in neighbour_list] +
                 [(this_more_than_3_neighbours, -1)],
                 constant=-3,
                 lagrange_multiplier=100,
-                label=f"{this_cell}_m3"
             )
 
             # if a cell has less than 2 neighbours
-            bqm.add_linear_inequality_constraint(
+            bqm.add_linear_equality_constraint(
                 [(neighbour, -1) for neighbour in neighbour_list] +
                 [(this_less_than_2_neighbours, -1)],
                 constant=2,
                 lagrange_multiplier=100,
-                label=f"{this_cell}_l2"
             )
 
             # if a cell has 3 neighbours
             # more than 2 neighbours
             bqm.add_linear_equality_constraint(
                 [(neighbour, 1) for neighbour in neighbour_list] +
-                [(this_3_neighbours, -1)],
+                [(this_3_neighbours_helper_a, -1)],
                 constant=-2,
                 lagrange_multiplier=70,
             )
+            # less than 4 neighbours
+            bqm.add_linear_equality_constraint(
+                [(neighbour, -1) for neighbour in neighbour_list] +
+                [(this_3_neighbours_helper_b, -1)],
+                constant=4,
+                lagrange_multiplier=70,
+            )
+            # using and gate, get the 3 neighbours flag
+            bqm.update(and_gate(this_3_neighbours_helper_a, this_3_neighbours_helper_b, this_3_neighbours, strength=100))
 
             # if a cell has 2 neighbours
+            # more than 1 neighbours
+            bqm.add_linear_equality_constraint(
+                [(neighbour, 1) for neighbour in neighbour_list] +
+                [(this_2_neighbours_helper_a, -1)],
+                constant=-1,
+                lagrange_multiplier=70,
+            )
             # less than 3 neighbours
             bqm.add_linear_equality_constraint(
                 [(neighbour, -1) for neighbour in neighbour_list] +
-                [(this_2_neighbours, -1)],
+                [(this_2_neighbours_helper_b, -1)],
                 constant=3,
                 lagrange_multiplier=70,
             )
-
+            # using and gate, get the 2 neighbours flag
+            bqm.update(and_gate(this_2_neighbours_helper_a, this_2_neighbours_helper_b, this_2_neighbours, strength=100))
             
+            # # for more than 3 neighbours and less than 2 neighbours, the cell is dead the next time step
+            bqm.add_quadratic(this_more_than_3_neighbours, next_cell, 25)
+            bqm.add_quadratic(this_less_than_2_neighbours, next_cell, 25)
+
+            # for 3 neighbours, the cell is alive the next time step
+            bqm.add_quadratic(this_3_neighbours, next_cell, -50)
+
+            # for 2 neighbours, the cell is the same as this time step the next time step
+            # bqm.add_linear_equality_constraint(
+            #     [(this_2_neighbours, 2), (next_cell, -1), (this_cell, 1)],
+            #     constant=-2,
+            #     lagrange_multiplier=5,
+            # )
+
             # # weakly presist the state
             # bqm.add_linear_equality_constraint(
-            #     [(next_cell, 1), (this_cell, -1)],
+            #     [(this_cell, 1), (next_cell, -1)],
             #     constant=0,
-            #     lagrange_multiplier=10,
+            #     lagrange_multiplier=1,
             # )
 
 

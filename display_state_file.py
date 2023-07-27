@@ -5,28 +5,15 @@ shown after one another
 """
 
 
+
+
 def display_state_file(file_dir):
     # import modules
     import sys
     import matplotlib.pyplot as plt
     import matplotlib.animation as animation
     import numpy as np
-
-    # label generator
-    def label_cell(x, y, t):
-        return f"x{x}y{y}t{t}"
-
-    def label_more_than_3_neighbours(x, y, t):
-        return f"x{x}y{y}t{t}m3"
-
-    def label_less_than_2_neighbours(x, y, t):
-        return f"x{x}y{y}t{t}l2"
-
-    def label_2_neighbours(x, y, t):
-        return f"x{x}y{y}t{t}e2"
-
-    def label_3_neighbours(x, y, t):
-        return f"x{x}y{y}t{t}e3"
+    from labels import (label_cell, label_same_as_next_time, label_more_than_3_neighbours, label_less_than_2_neighbours, label_2_neighbours, label_2_neighbours_helper_a, label_2_neighbours_helper_b, label_3_neighbours, label_3_neighbours_helper_a, label_3_neighbours_helper_b)
 
     # read input
     try:
@@ -93,6 +80,33 @@ def display_state_file(file_dir):
             for x in range(board_size_x):
                 try:
                     print(dict_input[label_3_neighbours(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print()
+        print()
+        print("N=2 Helper A and B      N=3 Helper A and B")
+        for y in range(board_size_y):
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_2_neighbours_helper_a(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_2_neighbours_helper_b(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_3_neighbours_helper_a(x, y, t)], end=" ")
+                except:
+                    print("0", end=" ")
+            print("  ", end="")
+            for x in range(board_size_x):
+                try:
+                    print(dict_input[label_3_neighbours_helper_b(x, y, t)], end=" ")
                 except:
                     print("0", end=" ")
             print()

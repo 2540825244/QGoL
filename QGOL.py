@@ -369,33 +369,14 @@ def classical_solve(bqm):
 print("Input:")
 print(f"Board size: {board_size_x}x{board_size_y}")
 print(f"Time: {time}")
-# for t in range(time):
-#     print(f"Time step {t}:")
-#     print("Cell: ")
-#     for y in range(board_size_y):
-#         for x in range(board_size_x):
-#             print(bqm.get_linear(label_cell(x, y, t)), end=" ")
-#         print()
-#     print()
-#     if t != time - 1:
-#         print("Reproduction: ")
-#         for y in range(board_size_y):
-#             for x in range(board_size_x):
-#                 print(bqm.get_linear(label_reproduce(x, y, t)), end=" ")
-#             print()
-#         print()
-#         print("Survive: ")
-#         for y in range(board_size_y):
-#             for x in range(board_size_x):
-#                 print(bqm.get_linear(label_survive(x, y, t)), end=" ")
-#             print()
-#         print()
-#         print("Death: ")
-#         for y in range(board_size_y):
-#             for x in range(board_size_x):
-#                 print(bqm.get_linear(label_death(x, y, t)), end=" ")
-#             print()
-#     print()
+for t in range(time):
+    print(f"Time step {t}:")
+    print("Cell: ")
+    for y in range(board_size_y):
+        for x in range(board_size_x):
+            print(dict_input[label_cell(x, y, t)], end=" ")
+        print()
+    print()
 choice = input(
     "Select solver or quit (h for hybrid, q for quantum, c for classic, quit to quit) [quit]: "
 )

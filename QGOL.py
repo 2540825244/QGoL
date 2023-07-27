@@ -56,12 +56,6 @@ var_list_cell = [
     for y in range(board_size_y)
     for t in range(time - 1)
 ]
-var_list_same_as_next_time = [
-    label_same_as_next_time(x, y, t)
-    for x in range(board_size_x)
-    for y in range(board_size_y)
-    for t in range(time - 1)
-]
 var_list_more_than_3_neighbours = [
     label_more_than_3_neighbours(x, y, t)
     for x in range(board_size_x)
@@ -112,8 +106,6 @@ var_list_3_neighbours_helper_b = [
 ]
 for var in var_list_cell:
     bqm.add_variable(var, 0)
-for var in var_list_same_as_next_time:
-    bqm.add_variable(var, 0)
 for var in var_list_more_than_3_neighbours:
     bqm.add_variable(var, 0)
 for var in var_list_less_than_2_neighbours:
@@ -150,7 +142,6 @@ for t in range(time - 1):
             neighbour_list.remove(label_cell(x, y, t))
             this_cell = label_cell(x, y, t)
             next_cell = label_cell(x, y, t + 1)
-            this_same_as_next_time = label_same_as_next_time(x, y, t)
             this_more_than_3_neighbours = label_more_than_3_neighbours(x, y, t)
             this_less_than_2_neighbours = label_less_than_2_neighbours(x, y, t)
             this_2_neighbours = label_2_neighbours(x, y, t)
@@ -162,6 +153,9 @@ for t in range(time - 1):
 
             # temp combination constraint
             # bqm.update(combinations([this_more_than_3_neighbours, this_less_than_2_neighbours, this_2_neighbours, this_3_neighbours], 1, strength=50))
+
+            # same as next time constraint
+            # penalty function in the form
 
             # if a cell has more than 3 neighbours
             bqm.add_linear_equality_constraint(
@@ -229,12 +223,12 @@ for t in range(time - 1):
             #     lagrange_multiplier=5,
             # )
 
-            # # weakly presist the state
-            # bqm.add_linear_equality_constraint(
-            #     [(this_cell, 1), (next_cell, -1)],
-            #     constant=0,
-            #     lagrange_multiplier=1,
-            # )
+            # weakly presist the state
+            bqm.add_linear_equality_constraint(
+                [(this_cell, 1), (next_cell, -1)],
+                constant=0,
+                lagrange_multiplier=20,
+            )
 
 
 

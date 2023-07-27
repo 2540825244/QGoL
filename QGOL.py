@@ -338,7 +338,7 @@ def hybrid_solve(bqm):
 def quantum_solve(bqm):
     print("Solving...")
     time_start = datetime.datetime.now()
-    sampler = EmbeddingComposite(DWaveSampler(solver={"topology__type": "zephyr"}))
+    sampler = EmbeddingComposite(DWaveSampler(solver={"topology__type": "pegasus"}))
     sampleset = sampler.sample(bqm, label="QGOL - Q", num_reads=1000)
     solution = sampleset.first.sample
     print("Solved")

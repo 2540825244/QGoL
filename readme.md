@@ -34,3 +34,7 @@ Anything else is just broken (basically).
 ## Misc
 
 The problem formulation is by no means efficient, requiring 10 variables for a single cell on the board at a single time. Some variables can definitely be removed (I think).
+
+## TODO
+
+Update non_annealing_solver.py to match the newer solution structure.

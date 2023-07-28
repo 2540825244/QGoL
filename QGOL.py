@@ -161,21 +161,22 @@ for t in range(time - 1):
             this_3_neighbours_helper_a = label_3_neighbours_helper_a(x, y, t)
             this_3_neighbours_helper_b = label_3_neighbours_helper_b(x, y, t)
 
-            overall_strength_factor = 1
+            overall_strength_factor = 0.7**t
 
-            # temp combination constraint
-            bqm.update(
-                combinations(
-                    [
-                        this_more_than_3_neighbours,
-                        this_less_than_2_neighbours,
-                        this_2_neighbours,
-                        this_3_neighbours,
-                    ],
-                    1,
-                    strength=50 * overall_strength_factor,
-                )
-            )
+
+            # # temp combination constraint
+            # bqm.update(
+            #     combinations(
+            #         [
+            #             this_more_than_3_neighbours,
+            #             this_less_than_2_neighbours,
+            #             this_2_neighbours,
+            #             this_3_neighbours,
+            #         ],
+            #         1,
+            #         strength=50 * overall_strength_factor,
+            #     )
+            # )
 
             # same as next time constraint
             # penalty function in the form

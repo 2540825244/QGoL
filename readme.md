@@ -38,3 +38,5 @@ The problem formulation is by no means efficient, requiring 10 variables for a s
 ## TODO
 
 Update non_annealing_solver.py to match the newer solution structure.
+
+Revamp label system.

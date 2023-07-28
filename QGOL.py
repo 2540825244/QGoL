@@ -163,22 +163,20 @@ for t in range(time - 1):
 
             overall_strength_factor = 1
 
-            # temp combination constraint
-            bqm.update(
-                combinations(
-                    [
-                        this_more_than_3_neighbours,
-                        this_less_than_2_neighbours,
-                        this_2_neighbours,
-                        this_3_neighbours,
-                    ],
-                    1,
-                    strength=50 * overall_strength_factor,
-                )
-            )
 
-            # same as next time constraint
-            # penalty function in the form
+            # # temp combination constraint
+            # bqm.update(
+            #     combinations(
+            #         [
+            #             this_more_than_3_neighbours,
+            #             this_less_than_2_neighbours,
+            #             this_2_neighbours,
+            #             this_3_neighbours,
+            #         ],
+            #         1,
+            #         strength=50 * overall_strength_factor,
+            #     )
+            # )
 
             # if a cell has more than 3 neighbours
             bqm.add_linear_equality_constraint(
@@ -255,8 +253,11 @@ for t in range(time - 1):
             )
 
             # for 3 neighbours, the cell is alive the next time step
+            # penalty function is: E3-E3N
+            three_neighbours_penalty_factor = 75
+            bqm.add_linear(this_3_neighbours, three_neighbours_penalty_factor * overall_strength_factor)
             bqm.add_quadratic(
-                this_3_neighbours, next_cell, -75 * overall_strength_factor
+                this_3_neighbours, next_cell, -three_neighbours_penalty_factor * overall_strength_factor
             )
 
             # for 2 neighbours, the cell is the same as this time step the next time step
@@ -296,7 +297,7 @@ for t in range(time - 1):
 
             # make helper c only true when the E2 is true
             # penalty function is: C-E2C
-            helper_c_penalty_factor = 25
+            helper_c_penalty_factor = 50
             bqm.add_linear(
                 this_2_neighbours_helper_c,
                 helper_c_penalty_factor * overall_strength_factor,
@@ -403,9 +404,7 @@ try:
 except:
     f_output = open("working_folder/output.txt", "w")
 
-dict_output = dict_input
-for var in sampleset.first.sample:
-    dict_output[var] = sampleset.first.sample[var]
+dict_output = {**dict_input, **sampleset.first.sample}
 dict_output["x"] = board_size_x
 dict_output["y"] = board_size_y
 dict_output["t"] = time

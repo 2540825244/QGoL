@@ -58,6 +58,7 @@ def display_state_file(file_dir):
 
     # display like in OGOL.py
     # output the input and ask for confirmation
+    dict_copy = dict_input.copy()
     print("Input:")
     print(f"Board size: {board_size_x}x{board_size_y}")
     print(f"Time: {time}")
@@ -66,64 +67,74 @@ def display_state_file(file_dir):
         print("Cell        N>3         N<2         N=2         N=3")
         for y in range(board_size_y):
             for x in range(board_size_x):
-                print(dict_input[label_cell(x, y, t)], end=" ")
+                print(dict_copy[label_cell(x, y, t)], end=" ")
+                del dict_copy[label_cell(x, y, t)]
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_more_than_3_neighbours(x, y, t)], end=" ")
+                    print(dict_copy[label_more_than_3_neighbours(x, y, t)], end=" ")
+                    del dict_copy[label_more_than_3_neighbours(x, y, t)]
                 except:
-                    print("0", end=" ")
+                    print("_", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_less_than_2_neighbours(x, y, t)], end=" ")
+                    print(dict_copy[label_less_than_2_neighbours(x, y, t)], end=" ")
+                    del dict_copy[label_less_than_2_neighbours(x, y, t)]
                 except:
-                    print("0", end=" ")
+                    print("_", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_2_neighbours(x, y, t)], end=" ")
+                    print(dict_copy[label_2_neighbours(x, y, t)], end=" ")
+                    del dict_copy[label_2_neighbours(x, y, t)]
                 except:
-                    print("0", end=" ")
+                    print("_", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_3_neighbours(x, y, t)], end=" ")
+                    print(dict_copy[label_3_neighbours(x, y, t)], end=" ")
+                    del dict_copy[label_3_neighbours(x, y, t)]
                 except:
-                    print("0", end=" ")
+                    print("_", end=" ")
             print()
         print()
         print("N=2 Helper A and B and C            N=3 Helper A and B")
         for y in range(board_size_y):
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_2_neighbours_helper_a(x, y, t)], end=" ")
+                    print(dict_copy[label_2_neighbours_helper_a(x, y, t)], end=" ")
+                    del dict_copy[label_2_neighbours_helper_a(x, y, t)]
                 except:
-                    print("0", end=" ")
+                    print("_", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_2_neighbours_helper_b(x, y, t)], end=" ")
+                    print(dict_copy[label_2_neighbours_helper_b(x, y, t)], end=" ")
+                    del dict_copy[label_2_neighbours_helper_b(x, y, t)]
                 except:
-                    print("0", end=" ")
+                    print("_", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_2_neighbours_helper_c(x, y, t)], end=" ")
+                    print(dict_copy[label_2_neighbours_helper_c(x, y, t)], end=" ")
+                    del dict_copy[label_2_neighbours_helper_c(x, y, t)]
                 except:
-                    print("0", end=" ")
+                    print("_", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_3_neighbours_helper_a(x, y, t)], end=" ")
+                    print(dict_copy[label_3_neighbours_helper_a(x, y, t)], end=" ")
+                    del dict_copy[label_3_neighbours_helper_a(x, y, t)]
                 except:
-                    print("0", end=" ")
+                    print("_", end=" ")
             print("  ", end="")
             for x in range(board_size_x):
                 try:
-                    print(dict_input[label_3_neighbours_helper_b(x, y, t)], end=" ")
+                    print(dict_copy[label_3_neighbours_helper_b(x, y, t)], end=" ")
+                    del dict_copy[label_3_neighbours_helper_b(x, y, t)]
                 except:
-                    print("0", end=" ")
+                    print("_", end=" ")
             print()
         print()
     print("Continue? (y/n) [n]")

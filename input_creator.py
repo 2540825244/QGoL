@@ -9,6 +9,7 @@ commands:
     fill t original_value new_value
     show
     save
+    quit
 """
 
 import sys

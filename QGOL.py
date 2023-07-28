@@ -161,7 +161,7 @@ for t in range(time - 1):
             this_3_neighbours_helper_a = label_3_neighbours_helper_a(x, y, t)
             this_3_neighbours_helper_b = label_3_neighbours_helper_b(x, y, t)
 
-            overall_strength_factor = 0.7**t
+            overall_strength_factor = 1
 
 
             # # temp combination constraint
@@ -270,7 +270,7 @@ for t in range(time - 1):
                     this_cell,
                     next_cell,
                     this_2_neighbours_helper_c,
-                    strength=2
+                    strength=0.5
                     * two_neighbours_penalty_factor
                     * overall_strength_factor,
                 )
@@ -404,9 +404,7 @@ try:
 except:
     f_output = open("working_folder/output.txt", "w")
 
-dict_output = dict_input
-for var in sampleset.first.sample:
-    dict_output[var] = sampleset.first.sample[var]
+dict_output = {**dict_input, **sampleset.first.sample}
 dict_output["x"] = board_size_x
 dict_output["y"] = board_size_y
 dict_output["t"] = time

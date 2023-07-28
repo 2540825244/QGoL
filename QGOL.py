@@ -254,7 +254,7 @@ for t in range(time - 1):
 
             # for 3 neighbours, the cell is alive the next time step
             # penalty function is: E3-E3N
-            three_neighbours_penalty_factor = 50
+            three_neighbours_penalty_factor = 75
             bqm.add_linear(this_3_neighbours, three_neighbours_penalty_factor * overall_strength_factor)
             bqm.add_quadratic(
                 this_3_neighbours, next_cell, -three_neighbours_penalty_factor * overall_strength_factor
@@ -270,7 +270,7 @@ for t in range(time - 1):
                     this_cell,
                     next_cell,
                     this_2_neighbours_helper_c,
-                    strength=0.5
+                    strength=2
                     * two_neighbours_penalty_factor
                     * overall_strength_factor,
                 )
@@ -297,7 +297,7 @@ for t in range(time - 1):
 
             # make helper c only true when the E2 is true
             # penalty function is: C-E2C
-            helper_c_penalty_factor = 25
+            helper_c_penalty_factor = 50
             bqm.add_linear(
                 this_2_neighbours_helper_c,
                 helper_c_penalty_factor * overall_strength_factor,

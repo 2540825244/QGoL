@@ -178,9 +178,6 @@ for t in range(time - 1):
             #     )
             # )
 
-            # same as next time constraint
-            # penalty function in the form
-
             # if a cell has more than 3 neighbours
             bqm.add_linear_equality_constraint(
                 [(neighbour, 1) for neighbour in neighbour_list]
@@ -256,8 +253,11 @@ for t in range(time - 1):
             )
 
             # for 3 neighbours, the cell is alive the next time step
+            # penalty function is: E3-E3N
+            three_neighbours_penalty_factor = 50
+            bqm.add_linear(this_3_neighbours, three_neighbours_penalty_factor * overall_strength_factor)
             bqm.add_quadratic(
-                this_3_neighbours, next_cell, -75 * overall_strength_factor
+                this_3_neighbours, next_cell, -three_neighbours_penalty_factor * overall_strength_factor
             )
 
             # for 2 neighbours, the cell is the same as this time step the next time step

@@ -1,0 +1,10 @@
+"filename", "language", "Python", "pip requirements", "Markdown", "comment", "blank", "total"
+"k:\RandomProject\QuantumComputing\QuantumGameOfLife\QGoL\QGOL.py", "Python", 333, 0, 0, 50, 32, 415
+"k:\RandomProject\QuantumComputing\QuantumGameOfLife\QGoL\display_state_file.py", "Python", 158, 0, 0, 9, 13, 180
+"k:\RandomProject\QuantumComputing\QuantumGameOfLife\QGoL\input_creator.py", "Python", 86, 0, 0, 7, 9, 102
+"k:\RandomProject\QuantumComputing\QuantumGameOfLife\QGoL\labels.py", "Python", 20, 0, 0, 1, 19, 40
+"k:\RandomProject\QuantumComputing\QuantumGameOfLife\QGoL\non_annealing_solver.py", "Python", 88, 0, 0, 6, 18, 112
+"k:\RandomProject\QuantumComputing\QuantumGameOfLife\QGoL\readme.md", "Markdown", 0, 0, 23, 0, 19, 42
+"k:\RandomProject\QuantumComputing\QuantumGameOfLife\QGoL\requirements.txt", "pip requirements", 0, 12, 0, 0, 1, 13
+"k:\RandomProject\QuantumComputing\QuantumGameOfLife\QGoL\tool.py", "Python", 13, 0, 0, 4, 8, 25
+"Total", "-", 698, 12, 23, 77, 119, 929
